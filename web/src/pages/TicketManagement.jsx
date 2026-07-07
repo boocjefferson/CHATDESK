@@ -11,34 +11,34 @@ export default function TicketManagement() {
   return (
     <section>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold">Ticket</h3>
+        <h3 className="text-lg font-bold text-navy">Ticket</h3>
         <input
           type="text"
           placeholder="Search"
           disabled
-          className="rounded-full border border-gray-400 px-4 py-1 text-sm"
+          className="rounded-full border border-gray-300 px-4 py-1 text-sm text-navy placeholder:text-gray-400"
         />
       </div>
 
       <div className="mb-4 flex items-center gap-3 rounded-2xl border border-gray-300 px-4 py-3">
-        <span className="font-medium">Filters</span>
-        <span className="rounded-full border border-gray-400 px-3 py-1 text-sm">All Category</span>
-        <span className="ml-auto rounded-full border border-gray-400 px-3 py-1 text-sm">Sort: A-Z</span>
+        <span className="font-medium text-navy">Filters</span>
+        <span className="rounded-full border border-gold px-3 py-1 text-sm text-navy">All Category</span>
+        <span className="ml-auto rounded-full border border-gold px-3 py-1 text-sm text-navy">Sort: A-Z</span>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-300">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-gray-300 text-sm text-gray-600">
-              <th className="px-4 py-3">User Question</th>
-              <th className="px-4 py-3">From User</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3 text-right">Action</th>
+            <tr className="border-b border-gray-300 bg-navy text-sm text-white">
+              <th className="px-4 py-3 font-semibold">User Question</th>
+              <th className="px-4 py-3 font-semibold">From User</th>
+              <th className="px-4 py-3 font-semibold">Category</th>
+              <th className="px-4 py-3 text-right font-semibold">Action</th>
             </tr>
           </thead>
           <tbody>
             {placeholderTickets.map((ticket) => (
-              <tr key={ticket.id} className="border-b border-gray-200 last:border-0">
+              <tr key={ticket.id} className="border-b border-gray-200 text-navy last:border-0">
                 <td className="px-4 py-3">{ticket.question}</td>
                 <td className="px-4 py-3">{ticket.fromUser}</td>
                 <td className="px-4 py-3">{ticket.category}</td>

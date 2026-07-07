@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import ustpLogo from "../assets/ustp-logo.png";
 
 // Matches the sidebar in ui-prototype/admin_ticket_board.png and
 // admin_faq_management.png exactly. User Management and Analytics Overview
@@ -16,9 +17,12 @@ export default function Sidebar() {
   const { currentUser, logout } = useAuth();
 
   return (
-    <aside className="flex h-screen w-64 flex-col justify-between border-r border-gray-300 px-6 py-6">
+    <aside className="flex h-screen w-64 flex-col justify-between bg-navy px-6 py-6 text-white">
       <div>
-        <h1 className="mb-8 text-xl font-bold">Admin Panel</h1>
+        <div className="mb-8 flex items-center gap-2">
+          <img src={ustpLogo} alt="USTP logo" className="h-10 w-auto" />
+          <h1 className="text-lg font-bold">Admin Panel</h1>
+        </div>
         <nav className="space-y-4">
           {navItems.map((item) =>
             item.enabled ? (
@@ -26,7 +30,11 @@ export default function Sidebar() {
                 key={item.label}
                 to={item.to}
                 className={({ isActive }) =>
-                  `block text-base ${isActive ? "font-bold text-black" : "text-gray-800 hover:text-black"}`
+                  `block border-l-2 pl-3 text-base ${
+                    isActive
+                      ? "border-gold font-bold text-gold"
+                      : "border-transparent text-white/80 hover:text-white"
+                  }`
                 }
               >
                 {item.label}
@@ -34,7 +42,7 @@ export default function Sidebar() {
             ) : (
               <span
                 key={item.label}
-                className="block cursor-not-allowed text-base text-gray-400"
+                className="block cursor-not-allowed border-l-2 border-transparent pl-3 text-base text-white/40"
                 title="Coming in a later sprint"
               >
                 {item.label}
@@ -44,12 +52,12 @@ export default function Sidebar() {
         </nav>
       </div>
 
-      <div className="flex items-center justify-between border-t border-gray-300 pt-4">
+      <div className="flex items-center justify-between border-t border-white/20 pt-4">
         <span className="truncate text-sm font-bold">{currentUser?.email}</span>
         <button
           type="button"
           onClick={logout}
-          className="rounded-full border border-gray-400 px-4 py-1 text-sm hover:bg-gray-100"
+          className="rounded-full border border-gold px-4 py-1 text-sm text-gold hover:bg-gold hover:text-navy-dark"
         >
           Log Out
         </button>
@@ -57,3 +65,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+

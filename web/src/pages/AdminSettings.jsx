@@ -8,16 +8,16 @@ export default function AdminSettings() {
 
   return (
     <section className="max-w-md">
-      <h3 className="mb-4 text-lg font-bold">Settings</h3>
+      <h3 className="mb-4 text-lg font-bold text-navy">Settings</h3>
 
       <div className="mb-6 rounded-2xl border border-gray-300 p-4">
         <p className="text-sm text-gray-500">Signed in as</p>
-        <p className="font-medium">{currentUser?.email}</p>
+        <p className="font-medium text-navy">{currentUser?.email}</p>
         <p className="text-sm text-gray-500">Role: {currentUser?.role}</p>
       </div>
 
       <div className="rounded-2xl border border-gray-300 p-4 opacity-60">
-        <h4 className="mb-3 font-medium">Change Password</h4>
+        <h4 className="mb-3 font-medium text-navy">Change Password</h4>
         <input
           type="password"
           placeholder="Current password"

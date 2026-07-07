@@ -10,19 +10,19 @@ export default function FaqManagement() {
   return (
     <section>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold">FAQs</h3>
+        <h3 className="text-lg font-bold text-navy">FAQs</h3>
         <div className="flex items-center gap-3">
           <input
             type="text"
             placeholder="Search"
             disabled
-            className="rounded-full border border-gray-400 px-4 py-1 text-sm"
+            className="rounded-full border border-gray-300 px-4 py-1 text-sm text-navy placeholder:text-gray-400"
           />
           <button
             type="button"
             disabled
             title="Coming soon"
-            className="cursor-not-allowed rounded-full border border-gray-400 px-4 py-1 text-sm text-gray-400"
+            className="cursor-not-allowed rounded-full border border-gold/50 px-4 py-1 text-sm text-gold/50"
           >
             Add FAQ
           </button>
@@ -30,23 +30,23 @@ export default function FaqManagement() {
       </div>
 
       <div className="mb-4 flex items-center gap-3 rounded-2xl border border-gray-300 px-4 py-3">
-        <span className="font-medium">Filters</span>
-        <span className="rounded-full border border-gray-400 px-3 py-1 text-sm">All Types</span>
-        <span className="ml-auto rounded-full border border-gray-400 px-3 py-1 text-sm">Sort: A-Z</span>
+        <span className="font-medium text-navy">Filters</span>
+        <span className="rounded-full border border-gold px-3 py-1 text-sm text-navy">All Types</span>
+        <span className="ml-auto rounded-full border border-gold px-3 py-1 text-sm text-navy">Sort: A-Z</span>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-300">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-gray-300 text-sm text-gray-600">
-              <th className="px-4 py-3">FAQ</th>
-              <th className="px-4 py-3">Category</th>
-              <th className="px-4 py-3 text-right">Action</th>
+            <tr className="border-b border-gray-300 bg-navy text-sm text-white">
+              <th className="px-4 py-3 font-semibold">FAQ</th>
+              <th className="px-4 py-3 font-semibold">Category</th>
+              <th className="px-4 py-3 text-right font-semibold">Action</th>
             </tr>
           </thead>
           <tbody>
             {placeholderFaqs.map((faq) => (
-              <tr key={faq.id} className="border-b border-gray-200 last:border-0">
+              <tr key={faq.id} className="border-b border-gray-200 text-navy last:border-0">
                 <td className="px-4 py-3">{faq.question}</td>
                 <td className="px-4 py-3">{faq.category}</td>
                 <td className="px-4 py-3 text-right text-gray-400">Coming soon</td>
