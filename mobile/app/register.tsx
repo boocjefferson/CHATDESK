@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { router } from "expo-router";
+import { useAuth } from "../context/AuthContext";
 import { colors } from "../theme/colors";
 
 // No Registration mockup existed in ui-prototype/ - matches Login's structure
@@ -23,10 +24,23 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [course, setCourse] = useState(COURSE_OPTIONS[0].value);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register } = useAuth();
 
-  const handleRegister = () => {
-    // TODO(Keith): wire this up to the backend once feature/project-setup
-    // and feature/jwt-authentication are merged. For now this is UI only.
+  const handleRegister = async () => {
+    setErrorMessage("");
+    setIsSubmitting(true);
+    try {
+      await register({ first_name: firstName, last_name: lastName, email, password, course });
+      router.replace("/");
+    } catch (error: any) {
+      const details = error.response?.data?.details;
+      const firstDetail = details ? (Object.values(details)[0] as string[])?.[0] : null;
+      setErrorMessage(firstDetail || error.response?.data?.message || "Unable to register right now.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -77,8 +91,14 @@ export default function RegisterScreen() {
           </Picker>
         </View>
 
-        <Pressable style={styles.button} onPress={handleRegister}>
-          <Text style={styles.buttonText}>Sign Up</Text>
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+        <Pressable style={styles.button} onPress={handleRegister} disabled={isSubmitting}>
+          {isSubmitting ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.buttonText}>Sign Up</Text>
+          )}
         </Pressable>
 
         <Pressable onPress={() => router.push("/login")}>
@@ -100,8 +120,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logo: { width: 90, height: 90, marginBottom: 4 },
-  // Slab-serif to echo the "USTP" wordmark's blocky weight. Requires fonts
-  // loaded via useFonts in _layout.tsx - see fonts.ts in this delivery.
   brandTitle: {
     fontSize: 26,
     fontFamily: "RobotoSlab_700Bold",
@@ -154,4 +172,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   signupLink: { fontFamily: "Montserrat_700Bold", color: colors.navy },
+  errorText: { color: colors.errorRed, fontSize: 13, marginBottom: 8, textAlign: "center" },
 });

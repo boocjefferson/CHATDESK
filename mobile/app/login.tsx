@@ -1,15 +1,27 @@
 import { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
+import { useAuth } from "../context/AuthContext";
 import { colors } from "../theme/colors";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
 
-  const handleLogin = () => {
-    // TODO(Keith): wire this up to the backend once feature/project-setup
-    // and feature/jwt-authentication are merged. For now this is UI only.
+  const handleLogin = async () => {
+    setErrorMessage("");
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+      router.replace("/");
+    } catch (error: any) {
+      setErrorMessage(error.response?.data?.message || "Invalid email or password.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -37,8 +49,14 @@ export default function LoginScreen() {
           onChangeText={setPassword}
         />
 
-        <Pressable style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Log in</Text>
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+        <Pressable style={styles.button} onPress={handleLogin} disabled={isSubmitting}>
+          {isSubmitting ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.buttonText}>Log in</Text>
+          )}
         </Pressable>
 
         <Pressable onPress={() => router.push("/register")}>
@@ -60,8 +78,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logo: { width: 120, height: 120, marginBottom: 8 },
-  // Slab-serif to echo the "USTP" wordmark's blocky weight. Requires fonts
-  // loaded via useFonts in _layout.tsx - see fonts.ts in this delivery.
   brandTitle: {
     fontSize: 30,
     fontFamily: "RobotoSlab_700Bold",
@@ -103,4 +119,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   signupLink: { fontFamily: "Montserrat_700Bold", color: colors.navy },
+  errorText: { color: colors.errorRed, fontSize: 13, marginBottom: 8, textAlign: "center" },
 });
