@@ -1,0 +1,94 @@
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import axiosClient from "../lib/axiosClient";
+import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from "../lib/tokenStorage";
+
+export type ChatDeskUser = {
+  user_id: number;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: "student" | "admin";
+  course: string | null;
+  created_at: string;
+};
+
+type RegisterPayload = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  course: string;
+};
+
+type AuthContextValue = {
+  currentUser: ChatDeskUser | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<ChatDeskUser>;
+  register: (payload: RegisterPayload) => Promise<ChatDeskUser>;
+  logout: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [currentUser, setCurrentUser] = useState<ChatDeskUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const accessToken = await getAccessToken();
+      if (!accessToken) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const { data } = await axiosClient.get<ChatDeskUser>("/auth/me/");
+        setCurrentUser(data);
+      } catch {
+        await clearTokens();
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    const { data } = await axiosClient.post("/auth/login/", { email, password });
+    await saveTokens(data.access, data.refresh);
+    setCurrentUser(data.user);
+    return data.user as ChatDeskUser;
+  };
+
+  const register = async (payload: RegisterPayload) => {
+    const { data } = await axiosClient.post("/auth/register/", payload);
+    await saveTokens(data.access, data.refresh);
+    setCurrentUser(data.user);
+    return data.user as ChatDeskUser;
+  };
+
+  const logout = async () => {
+    const refreshToken = await getRefreshToken();
+    try {
+      if (refreshToken) {
+        await axiosClient.post("/auth/logout/", { refresh: refreshToken });
+      }
+    } finally {
+      await clearTokens();
+      setCurrentUser(null);
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ currentUser, isLoading, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}
