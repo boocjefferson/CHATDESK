@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import axiosClient from "../lib/axiosClient";
-import { clearTokens, getAccessToken, saveTokens } from "../lib/tokenStorage";
+import { clearTokens, getAccessToken, getRefreshToken, saveTokens } from "../lib/tokenStorage";
 
 export type ChatDeskUser = {
   user_id: number;
@@ -67,8 +67,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await clearTokens();
-    setCurrentUser(null);
+    const refreshToken = await getRefreshToken();
+    try {
+      if (refreshToken) {
+        await axiosClient.post("/auth/logout/", { refresh: refreshToken });
+      }
+    } finally {
+      await clearTokens();
+      setCurrentUser(null);
+    }
   };
 
   return (
