@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { ActivityIndicator, FlatList, Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../theme/colors";
@@ -26,7 +25,10 @@ export default function RegisterScreen() {
   const [course, setCourse] = useState(COURSE_OPTIONS[0].value);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCoursePickerOpen, setIsCoursePickerOpen] = useState(false);
   const { register } = useAuth();
+
+  const selectedCourseLabel = COURSE_OPTIONS.find((option) => option.value === course)?.label;
 
   const handleRegister = async () => {
     setErrorMessage("");
@@ -83,13 +85,34 @@ export default function RegisterScreen() {
           onChangeText={setPassword}
         />
 
-        <View style={styles.pickerWrapper}>
-          <Picker selectedValue={course} onValueChange={setCourse} style={{ color: colors.textPrimary }}>
-            {COURSE_OPTIONS.map((option) => (
-              <Picker.Item key={option.value} label={option.label} value={option.value} />
-            ))}
-          </Picker>
-        </View>
+        <Pressable style={styles.pickerWrapper} onPress={() => setIsCoursePickerOpen(true)}>
+          <Text style={styles.pickerValueText}>{selectedCourseLabel}</Text>
+          <Text style={styles.pickerChevron}>▾</Text>
+        </Pressable>
+
+        <Modal visible={isCoursePickerOpen} transparent animationType="fade" onRequestClose={() => setIsCoursePickerOpen(false)}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setIsCoursePickerOpen(false)}>
+            <View style={styles.modalSheet}>
+              <FlatList
+                data={COURSE_OPTIONS}
+                keyExtractor={(option) => option.value}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={styles.modalOption}
+                    onPress={() => {
+                      setCourse(item.value);
+                      setIsCoursePickerOpen(false);
+                    }}
+                  >
+                    <Text style={[styles.modalOptionText, item.value === course && styles.modalOptionTextSelected]}>
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                )}
+              />
+            </View>
+          </Pressable>
+        </Modal>
 
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
@@ -150,11 +173,46 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   pickerWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     marginBottom: 12,
-    overflow: "hidden",
+  },
+  pickerValueText: {
+    fontSize: 16,
+    fontFamily: "Montserrat_400Regular",
+    color: colors.textPrimary,
+  },
+  pickerChevron: { color: colors.textSecondary, fontSize: 16 },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  modalSheet: {
+    maxHeight: 360,
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    paddingVertical: 8,
+  },
+  modalOption: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  modalOptionText: {
+    fontSize: 16,
+    fontFamily: "Montserrat_400Regular",
+    color: colors.textPrimary,
+  },
+  modalOptionTextSelected: {
+    fontFamily: "Montserrat_700Bold",
+    color: colors.navy,
   },
   button: {
     backgroundColor: colors.gold,
