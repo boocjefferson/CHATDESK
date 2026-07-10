@@ -72,6 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refreshToken) {
         await axiosClient.post("/auth/logout/", { refresh: refreshToken });
       }
+    } catch {
+      // Best-effort: still clear the local session even if the backend
+      // couldn't blacklist the token (e.g. it's already expired/invalid).
     } finally {
       await clearTokens();
       setCurrentUser(null);
