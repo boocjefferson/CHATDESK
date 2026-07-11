@@ -5,6 +5,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Auth endpoints per claude/API_CONTRACT.md: register, login, token/refresh, logout, me.
     path("api/v1/auth/", include("users.urls")),
+    path("api/v1/", include("inquiry_logs.urls")),
+    path("api/v1/", include("tickets.urls")),
     # FAQ, chat, and ticket endpoints are built in later feature branches
     # (feature/faq-api-endpoints, feature/ticket-escalation-logic) - not Sprint 1 scope here.
     path("api/v1/faqs/", include("faqs.urls")),

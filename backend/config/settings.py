@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "users",
     "faqs",
+    "inquiry_logs",
     "tickets",
 ]
 
@@ -101,6 +102,8 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
     "EXCEPTION_HANDLER": "config.exceptions.api_exception_handler",
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
 }
 
 SIMPLE_JWT = {
