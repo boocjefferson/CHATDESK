@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "users",
     "faqs",
+    "tickets",
 ]
 
 MIDDLEWARE = [
