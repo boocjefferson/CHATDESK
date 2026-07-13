@@ -121,3 +121,5 @@ SIMPLE_JWT = {
 }
 
 CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", default="", cast=Csv())
+
+OPENAI_API_KEY = config("OPENAI_API_KEY")
