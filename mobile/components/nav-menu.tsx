@@ -1,5 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { BlurView } from "expo-blur";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -19,7 +20,8 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "../theme/colors";
+import { useTheme } from "../context/ThemeContext";
+import type { ThemePalette } from "../theme/colors";
 
 // "Recent Chat N" rows are static placeholders matching the approved
 // wireframe - there's no chat history endpoint yet to source real data
@@ -44,6 +46,8 @@ type NavMenuProps = {
 };
 
 export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProps) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const { width } = useWindowDimensions();
   const panelWidth = width * PANEL_WIDTH_RATIO;
   const [isMounted, setIsMounted] = useState(visible);
@@ -77,6 +81,16 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
       onClose();
       return;
     }
+    if (label === "Settings") {
+      onClose();
+      router.push("/settings");
+      return;
+    }
+    if (label === "View Tickets") {
+      onClose();
+      router.push("/tickets");
+      return;
+    }
     Alert.alert(label, "Coming soon.");
   };
 
@@ -101,7 +115,7 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
         <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
           <View style={styles.header}>
             <Pressable onPress={onClose} hitSlop={12}>
-              <MaterialIcons name="close" size={24} color={colors.navy} />
+              <MaterialIcons name="close" size={24} color={colors.accentText} />
             </Pressable>
             <Text style={styles.title}>ChatDesk</Text>
             <View style={styles.avatar}>
@@ -116,7 +130,7 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
                 style={styles.menuRow}
                 onPress={() => handleMenuItemPress(item.label)}
               >
-                <MaterialIcons name={item.icon} size={20} color={colors.navy} />
+                <MaterialIcons name={item.icon} size={20} color={colors.accentText} />
                 <Text style={styles.menuLabel}>{item.label}</Text>
               </Pressable>
             ))}
@@ -142,58 +156,59 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
   );
 }
 
-const styles = StyleSheet.create({
-  panel: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: colors.white,
-    shadowColor: "#000",
-    shadowOffset: { width: 4, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 12,
-  },
-  screen: { flex: 1, paddingHorizontal: 16 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 16,
-  },
-  title: { fontSize: 17, fontFamily: "RobotoSlab_700Bold", color: colors.navy },
-  avatar: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 1,
-    borderColor: colors.navy,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  avatarText: { fontFamily: "Montserrat_700Bold", color: colors.navy, fontSize: 11 },
-  menuList: { marginTop: 4 },
-  menuRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 },
-  menuLabel: { fontFamily: "Montserrat_400Regular", fontSize: 15, color: colors.textPrimary },
-  historyHeading: {
-    fontFamily: "Montserrat_700Bold",
-    fontSize: 14,
-    color: colors.navy,
-    marginTop: 18,
-    marginBottom: 6,
-  },
-  historyList: { flex: 1 },
-  historyListContent: { paddingBottom: 12 },
-  historyRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
-  historyLabel: { fontFamily: "Montserrat_400Regular", fontSize: 14, color: colors.textPrimary },
-  footer: { alignItems: "flex-end", paddingVertical: 14 },
-  logoutButton: {
-    borderWidth: 1,
-    borderColor: colors.navy,
-    borderRadius: 8,
-    paddingVertical: 9,
-    paddingHorizontal: 18,
-  },
-  logoutText: { fontFamily: "Montserrat_700Bold", color: colors.navy, fontSize: 13 },
-});
+const createStyles = (colors: ThemePalette) =>
+  StyleSheet.create({
+    panel: {
+      position: "absolute",
+      left: 0,
+      top: 0,
+      bottom: 0,
+      backgroundColor: colors.surface,
+      shadowColor: "#000",
+      shadowOffset: { width: 4, height: 0 },
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
+      elevation: 12,
+    },
+    screen: { flex: 1, paddingHorizontal: 16 },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 16,
+    },
+    title: { fontSize: 17, fontFamily: "RobotoSlab_700Bold", color: colors.accentText },
+    avatar: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      borderWidth: 1,
+      borderColor: colors.accentText,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    avatarText: { fontFamily: "Montserrat_700Bold", color: colors.accentText, fontSize: 11 },
+    menuList: { marginTop: 4 },
+    menuRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 },
+    menuLabel: { fontFamily: "Montserrat_400Regular", fontSize: 15, color: colors.textPrimary },
+    historyHeading: {
+      fontFamily: "Montserrat_700Bold",
+      fontSize: 14,
+      color: colors.accentText,
+      marginTop: 18,
+      marginBottom: 6,
+    },
+    historyList: { flex: 1 },
+    historyListContent: { paddingBottom: 12 },
+    historyRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
+    historyLabel: { fontFamily: "Montserrat_400Regular", fontSize: 14, color: colors.textPrimary },
+    footer: { alignItems: "flex-end", paddingVertical: 14 },
+    logoutButton: {
+      borderWidth: 1,
+      borderColor: colors.accentText,
+      borderRadius: 8,
+      paddingVertical: 9,
+      paddingHorizontal: 18,
+    },
+    logoutText: { fontFamily: "Montserrat_700Bold", color: colors.accentText, fontSize: 13 },
+  });
