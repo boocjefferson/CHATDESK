@@ -9,7 +9,7 @@ const navItems = [
   { label: "User Management", to: "/users", enabled: false },
   { label: "Tickets", to: "/tickets", enabled: true },
   { label: "FAQs", to: "/faqs", enabled: true },
-  { label: "Analytics Overview", to: "/analytics", enabled: false },
+  { label: "Analytics Overview", to: "/analytics", enabled: true },
   { label: "Settings", to: "/settings", enabled: true },
 ];
 

@@ -5,6 +5,7 @@ import AdminDashboardLayout from "./pages/AdminDashboardLayout.jsx";
 import TicketManagement from "./pages/TicketManagement.jsx";
 import FaqManagement from "./pages/FaqManagement.jsx";
 import AdminSettings from "./pages/AdminSettings.jsx";
+import AnalyticsOverview from "./pages/AnalyticsOverview.jsx";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route index element={<Navigate to="/tickets" replace />} />
         <Route path="tickets" element={<TicketManagement />} />
         <Route path="faqs" element={<FaqManagement />} />
+        <Route path="analytics" element={<AnalyticsOverview />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
