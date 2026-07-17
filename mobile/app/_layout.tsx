@@ -3,7 +3,9 @@ import { Montserrat_400Regular, Montserrat_700Bold } from "@expo-google-fonts/mo
 import { router, Stack, usePathname } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import { ThemeProvider } from "../context/ThemeContext";
 
 function RootNavigator() {
   const { currentUser, isLoading } = useAuth();
@@ -39,6 +41,8 @@ function RootNavigator() {
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />
       <Stack.Screen name="register" />
+      <Stack.Screen name="settings" />
+      <Stack.Screen name="tickets" />
     </Stack>
   );
 }
@@ -59,8 +63,12 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <RootNavigator />
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

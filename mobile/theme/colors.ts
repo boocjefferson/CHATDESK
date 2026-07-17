@@ -1,4 +1,3 @@
-
 export const colors = {
   navy: "#1B2A6B",
   navyDark: "#12194A",
@@ -10,4 +9,47 @@ export const colors = {
   textSecondary: "#6B7280",
   textMuted: "#9CA3AF",
   errorRed: "#DC2626",
+};
+
+// Semantic palette for screens that support dark mode (chat, nav menu,
+// settings). "accent" is the brand-navy fill (gradient/bubble background),
+// "accentText" is ink drawn on top of a surface - the two invert
+// independently in dark mode, which plain `colors.navy` reuse can't do.
+export type ThemePalette = {
+  accent: string;
+  accentText: string;
+  surface: string;
+  white: string;
+  border: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  gold: string;
+  errorRed: string;
+};
+
+export const lightTheme: ThemePalette = {
+  accent: "#1B2A6B",
+  accentText: "#1B2A6B",
+  surface: "#FFFFFF",
+  white: "#FFFFFF",
+  border: "#E2E4EC",
+  textPrimary: "#1B2A6B",
+  textSecondary: "#6B7280",
+  textMuted: "#9CA3AF",
+  gold: "#F5A623",
+  errorRed: "#DC2626",
+};
+
+export const darkTheme: ThemePalette = {
+  accent: "#2F3E8C",
+  accentText: "#A9B7FF",
+  surface: "#1A2036",
+  white: "#FFFFFF",
+  border: "#2E3555",
+  textPrimary: "#E9ECFB",
+  textSecondary: "#A6ADD1",
+  textMuted: "#6E7699",
+  gold: "#F5A623",
+  errorRed: "#F1685F",
 };

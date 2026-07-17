@@ -1,8 +1,17 @@
 import { useState } from "react";
-import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../context/AuthContext";
-import { colors } from "../theme/colors";
+import { colors, darkTheme } from "../theme/colors";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -25,8 +34,12 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.screen}>
-      {/* eslint-disable-next-line @typescript-eslint/no-var-requires */}
+    <ImageBackground
+      source={require("../assets/login.jpg")}
+      style={styles.screen}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay} />
       <Image source={require("../assets/ustp-logo.png")} style={styles.logo} resizeMode="contain" />
       <Text style={styles.brandTitle}>ChatDesk</Text>
 
@@ -34,7 +47,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={darkTheme.textMuted}
           autoCapitalize="none"
           keyboardType="email-address"
           value={email}
@@ -43,7 +56,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={darkTheme.textMuted}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -65,43 +78,54 @@ export default function LoginScreen() {
           </Text>
         </Pressable>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(10, 16, 46, 0.45)",
   },
   logo: { width: 120, height: 120, marginBottom: 8 },
   brandTitle: {
     fontSize: 30,
     fontFamily: "RobotoSlab_700Bold",
-    color: colors.navy,
+    color: colors.white,
     marginBottom: 20,
+    textShadowColor: "rgba(0, 0, 0, 0.35)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
   },
   card: {
     width: "100%",
     maxWidth: 360,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: darkTheme.surface,
     borderRadius: 20,
     padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 6,
   },
   input: {
+    backgroundColor: "#0E1224",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: darkTheme.textSecondary,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
     marginBottom: 12,
     fontSize: 16,
     fontFamily: "Montserrat_400Regular",
-    color: colors.textPrimary,
+    color: darkTheme.textPrimary,
   },
   button: {
     backgroundColor: colors.gold,
@@ -116,8 +140,8 @@ const styles = StyleSheet.create({
     marginTop: 14,
     fontSize: 13,
     fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
+    color: colors.white,
   },
-  signupLink: { fontFamily: "Montserrat_700Bold", color: colors.navy },
+  signupLink: { fontFamily: "Montserrat_700Bold", color: colors.white },
   errorText: { color: colors.errorRed, fontSize: 13, marginBottom: 8, textAlign: "center" },
 });
