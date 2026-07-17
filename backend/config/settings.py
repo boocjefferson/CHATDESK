@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "users",
     "faqs",
     "inquiry_logs",
+    "tickets",
 ]
 
 MIDDLEWARE = [
