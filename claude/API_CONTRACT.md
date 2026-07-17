@@ -160,7 +160,23 @@ POST,/api/v1/tickets/,student,Manual ticket creation (if student bypasses AI).
 GET,/api/v1/tickets/{ticket_id}/,all,Detail view (students can only view their own).
 PATCH,/api/v1/tickets/{ticket_id}/,admin,"Update ticket status, assign resolved_by, or add resolution notes."
 
+## Analytics (Admin Dashboard)
+
+### GET /api/v1/analytics/overview/
+Admin only. Optional ?date_from=, ?date_to= (YYYY-MM-DD) to scope the range.
+{
+  "total_inquiries": 128,
+  "total_escalations": 34,
+  "resolution_rate": 0.82,
+  "intent_frequencies": [
+    { "intent": "scholarship_requirements", "count": 45 },
+    { "intent": "unresolved_complex_query", "count": 34 }
+  ],
+  "tickets_by_status": { "pending": 5, "active": 3, "resolved": 26 }
+}
+
+
+
 ## Out of scope for this version (tracked for later contract revisions)
-- Analytics aggregation endpoints for the admin dashboard — Sprint 2
 - OpenAI API prompt engineering and system instructions injection — Sprint 2
 - System Usability Scale (SUS) survey data endpoints — Sprint 3 

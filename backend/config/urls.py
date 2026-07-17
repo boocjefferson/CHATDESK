@@ -7,5 +7,6 @@ urlpatterns = [
     path("api/v1/auth/", include("users.urls")),
     path("api/v1/", include("inquiry_logs.urls")),
     path("api/v1/", include("tickets.urls")),
+    path("api/v1/", include("analytics.urls")),
     path("api/v1/faqs/", include("faqs.urls")),
 ]
