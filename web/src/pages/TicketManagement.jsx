@@ -58,7 +58,7 @@ export default function TicketManagement() {
             {tickets.map((ticket) => (
               <tr key={ticket.ticket_id} className="border-b border-gray-200 text-navy last:border-0">
                 <td className="px-4 py-3">{ticket.issue_description}</td>
-                <td className="px-4 py-3">{ticket.user?.email ?? ticket.user}</td>
+                <td className="px-4 py-3">Student #{ticket.user_id}</td>
                 <td className="px-4 py-3">{ticket.subject_category}</td>
                 <td className="px-4 py-3">
                   <TicketStatusBadge status={ticket.status} />

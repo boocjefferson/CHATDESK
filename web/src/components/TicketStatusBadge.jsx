@@ -5,7 +5,7 @@ const STYLES = {
 };
 
 const LABELS = {
-  pending: "Unassigned",
+  pending: "Pending",
   active: "Active",
   resolved: "Resolved",
 };
