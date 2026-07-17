@@ -15,6 +15,8 @@ export default function AnalyticsOverview() {
   if (!data) return <p className="text-red-500">Could not load analytics.</p>;
 
   const maxCount = Math.max(...data.intent_frequencies.map((i) => i.count));
+  const totalTickets = Object.values(data.tickets_by_status).reduce((sum, count) => sum + count, 0);
+  const resolvedTickets = data.tickets_by_status.resolved ?? 0;
 
   return (
     <section>
@@ -22,8 +24,8 @@ export default function AnalyticsOverview() {
 
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Inquiries" value={data.total_inquiries} />
-        <StatCard label="Total Tickets" value={data.total_tickets} />
-        <StatCard label="Resolved Tickets" value={data.resolved_tickets} />
+        <StatCard label="Total Tickets" value={totalTickets} />
+        <StatCard label="Resolved Tickets" value={resolvedTickets} />
         <StatCard
           label="Resolution Rate"
           value={`${Math.round(data.resolution_rate * 100)}%`}
