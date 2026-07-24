@@ -1,7 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -17,6 +17,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BrandTitle } from "../components/brand-title";
 import { NavMenu } from "../components/nav-menu";
 import { useAuth } from "../context/AuthContext";
+import { useChat } from "../context/ChatContext";
 import { useTheme } from "../context/ThemeContext";
 import axiosClient from "../lib/axiosClient";
 import type { ThemePalette } from "../theme/colors";
@@ -29,37 +30,42 @@ const SUGGESTED_QUESTIONS = [
   "How do I get my clearance signed?",
 ];
 
-type ChatMessage = { role: "user" | "assistant"; text: string };
+type Phase = {
+  phase_id: number | null;
+  name: string | null;
+  guidance_message: string;
+  suggested_questions: string[];
+};
 
 export default function StudentChatScreen() {
   const { currentUser, logout } = useAuth();
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const { messages, isSending, sendMessage } = useChat();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [phase, setPhase] = useState<Phase | null>(null);
+  const [isPhaseBannerDismissed, setIsPhaseBannerDismissed] = useState(false);
 
   const userInitial = currentUser?.first_name?.[0]?.toUpperCase() ?? "?";
+  const hasActivePhase = phase !== null && phase.phase_id !== null && phase.name !== null;
 
-  const handleSend = async () => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await axiosClient.get<Phase>("/phases/current/");
+        setPhase(data);
+      } catch {
+        setPhase(null);
+      }
+    })();
+  }, []);
+
+  const handleSend = () => {
     const trimmed = message.trim();
     if (!trimmed || isSending) return;
-
-    setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
     setMessage("");
-    setIsSending(true);
-    try {
-      const { data } = await axiosClient.post("/chat/ask/", { message: trimmed });
-      setMessages((prev) => [...prev, { role: "assistant", text: data.reply }]);
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", text: "Chat isn't available yet - please check back soon." },
-      ]);
-    } finally {
-      setIsSending(false);
-    }
+    sendMessage(trimmed);
   };
 
   return (
@@ -87,6 +93,20 @@ export default function StudentChatScreen() {
             <Text style={styles.avatarText}>{userInitial}</Text>
           </Pressable>
         </View>
+
+        {hasActivePhase && !isPhaseBannerDismissed && phase ? (
+          <View style={styles.phaseBanner}>
+            <View style={styles.phaseBannerText}>
+              <Text style={styles.phaseBannerTitle}>{phase.name}</Text>
+              {phase.guidance_message ? (
+                <Text style={styles.phaseBannerMessage}>{phase.guidance_message}</Text>
+              ) : null}
+            </View>
+            <Pressable onPress={() => setIsPhaseBannerDismissed(true)} hitSlop={12}>
+              <MaterialIcons name="close" size={18} color={colors.textSecondary} />
+            </Pressable>
+          </View>
+        ) : null}
 
         <KeyboardAvoidingView
           style={styles.body}
@@ -139,6 +159,21 @@ export default function StudentChatScreen() {
                 >
                   <Text style={styles.suggestionText}>{question}</Text>
                   <MaterialIcons name="chevron-right" size={18} color={colors.white} style={styles.suggestionChevron} />
+                </Pressable>
+              ))}
+            </View>
+          ) : null}
+
+          {hasActivePhase && phase && phase.suggested_questions.length > 0 ? (
+            <View style={styles.phaseChipsRow}>
+              {phase.suggested_questions.map((question) => (
+                <Pressable
+                  key={question}
+                  style={({ pressed }) => [styles.phaseChip, pressed && styles.phaseChipPressed]}
+                  onPress={() => sendMessage(question)}
+                  disabled={isSending}
+                >
+                  <Text style={styles.phaseChipText}>{question}</Text>
                 </Pressable>
               ))}
             </View>
@@ -208,6 +243,36 @@ const createStyles = (colors: ThemePalette) =>
       elevation: 2,
     },
     avatarText: { fontFamily: "Montserrat_700Bold", color: colors.accentText, fontSize: 12 },
+    phaseBanner: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: 10,
+      marginHorizontal: 20,
+      marginBottom: 12,
+      padding: 14,
+      borderRadius: 14,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      elevation: 1,
+    },
+    phaseBannerText: { flex: 1 },
+    phaseBannerTitle: {
+      fontFamily: "Montserrat_700Bold",
+      fontSize: 14,
+      color: colors.accentText,
+      marginBottom: 2,
+    },
+    phaseBannerMessage: {
+      fontFamily: "Montserrat_400Regular",
+      fontSize: 13,
+      lineHeight: 18,
+      color: colors.textSecondary,
+    },
     body: { flex: 1, paddingHorizontal: 20 },
     welcomeBlock: { flex: 1, alignItems: "center", justifyContent: "center" },
     welcomeTitle: {
@@ -259,6 +324,26 @@ const createStyles = (colors: ThemePalette) =>
       color: colors.white,
     },
     suggestionChevron: { opacity: 0.7, marginLeft: 8 },
+    phaseChipsRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      paddingBottom: 12,
+    },
+    phaseChip: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 20,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    phaseChipPressed: { opacity: 0.6 },
+    phaseChipText: {
+      fontFamily: "Montserrat_400Regular",
+      fontSize: 13,
+      color: colors.textPrimary,
+    },
     inputBar: {
       flexDirection: "row",
       alignItems: "center",

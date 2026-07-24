@@ -9,7 +9,8 @@ class User(AbstractUser):
     tbl_user - extends AbstractUser, keyed by email instead of username.
 
     Field set matches claude/API_CONTRACT.md exactly: user_id, email, first_name,
-    last_name, role, course (nullable for admin), created_at.
+    last_name, role, course (nullable for admin), school_id (nullable for admin),
+    created_at.
     """
 
     class Role(models.TextChoices):
@@ -39,6 +40,7 @@ class User(AbstractUser):
     course = models.CharField(
         max_length=10, choices=Course.choices, null=True, blank=True
     )
+    school_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = "email"

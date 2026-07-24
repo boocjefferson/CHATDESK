@@ -21,12 +21,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BrandTitle } from "./brand-title";
+import { useChat } from "../context/ChatContext";
 import { useTheme } from "../context/ThemeContext";
 import type { ThemePalette } from "../theme/colors";
-
-// No chat history endpoint yet (backend only has auth + faqs so far) -
-// this stays empty until that's built rather than showing fake data.
-const RECENT_CHATS: string[] = [];
 
 const MENU_ITEMS: { label: string; icon: keyof typeof MaterialIcons.glyphMap }[] = [
   { label: "Start Chat", icon: "chat-bubble-outline" },
@@ -50,6 +47,7 @@ type NavMenuProps = {
 export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const { history, resumeSession, startNewChat } = useChat();
   const { width } = useWindowDimensions();
   const panelWidth = width * PANEL_WIDTH_RATIO;
   const [isMounted, setIsMounted] = useState(visible);
@@ -91,6 +89,7 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
 
   const handleMenuItemPress = (label: string) => {
     if (label === "Start Chat") {
+      startNewChat();
       onClose();
       return;
     }
@@ -121,6 +120,11 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
       return;
     }
     Alert.alert(label, "Coming soon.");
+  };
+
+  const handleResumeSession = (sessionId: string) => {
+    resumeSession(sessionId);
+    onClose();
   };
 
   const handleLogout = async () => {
@@ -183,14 +187,20 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
           </View>
 
           <Text style={styles.historyHeading}>History</Text>
-          {RECENT_CHATS.length === 0 ? (
+          {history.length === 0 ? (
             <Text style={styles.historyEmpty}>No recent chats yet.</Text>
           ) : (
             <ScrollView style={styles.historyList} contentContainerStyle={styles.historyListContent}>
-              {RECENT_CHATS.map((label) => (
-                <View key={label} style={styles.historyRow}>
-                  <Text style={styles.historyLabel}>{label}</Text>
-                </View>
+              {history.map((session) => (
+                <Pressable
+                  key={session.id}
+                  style={styles.historyRow}
+                  onPress={() => handleResumeSession(session.id)}
+                >
+                  <Text style={styles.historyLabel} numberOfLines={1}>
+                    {session.title}
+                  </Text>
+                </Pressable>
               ))}
             </ScrollView>
           )}

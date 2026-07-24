@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import { ChatProvider } from "../context/ChatContext";
 import { ThemeProvider } from "../context/ThemeContext";
 
 function RootNavigator() {
@@ -68,7 +69,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <AuthProvider>
-          <RootNavigator />
+          <ChatProvider>
+            <RootNavigator />
+          </ChatProvider>
         </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>

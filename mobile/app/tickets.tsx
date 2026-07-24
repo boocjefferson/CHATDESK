@@ -119,7 +119,12 @@ const createStyles = (colors: ThemePalette) =>
       paddingHorizontal: 20,
       paddingBottom: 12,
     },
-    columnHeader: { fontFamily: "Montserrat_700Bold", fontSize: 15, color: colors.textPrimary },
+    columnHeader: {
+      fontFamily: "Montserrat_700Bold",
+      fontSize: 15,
+      color: colors.textPrimary,
+      textAlign: "center",
+    },
     labelColumn: { flex: 1.1 },
     statusColumn: { flex: 1, alignItems: "center" },
     actionColumn: { flex: 1, alignItems: "center" },
