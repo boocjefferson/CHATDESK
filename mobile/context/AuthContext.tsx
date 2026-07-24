@@ -9,12 +9,14 @@ export type ChatDeskUser = {
   last_name: string;
   role: "student" | "admin";
   course: string | null;
+  school_id: string | null;
   created_at: string;
 };
 
 type RegisterPayload = {
   first_name: string;
   last_name: string;
+  school_id: string;
   email: string;
   password: string;
   course: string;

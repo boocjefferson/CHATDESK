@@ -1,5 +1,5 @@
-import { useFonts, RobotoSlab_700Bold } from "@expo-google-fonts/roboto-slab";
 import { Montserrat_400Regular, Montserrat_700Bold } from "@expo-google-fonts/montserrat";
+import { useFonts, PlusJakartaSans_700Bold } from "@expo-google-fonts/plus-jakarta-sans";
 import { router, Stack, usePathname } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -43,13 +43,15 @@ function RootNavigator() {
       <Stack.Screen name="register" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="tickets" />
+      <Stack.Screen name="profile" />
+      <Stack.Screen name="announcements" />
     </Stack>
   );
 }
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
-    RobotoSlab_700Bold,
+    PlusJakartaSans_700Bold,
     Montserrat_400Regular,
     Montserrat_700Bold,
   });

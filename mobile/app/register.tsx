@@ -12,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { BrandTitle } from "../components/brand-title";
 import { useAuth } from "../context/AuthContext";
 import { colors, darkTheme } from "../theme/colors";
 
@@ -31,6 +32,7 @@ const COURSE_OPTIONS = [
 export default function RegisterScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [schoolId, setSchoolId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [course, setCourse] = useState(COURSE_OPTIONS[0].value);
@@ -45,7 +47,14 @@ export default function RegisterScreen() {
     setErrorMessage("");
     setIsSubmitting(true);
     try {
-      await register({ first_name: firstName, last_name: lastName, email, password, course });
+      await register({
+        first_name: firstName,
+        last_name: lastName,
+        school_id: schoolId,
+        email,
+        password,
+        course,
+      });
       router.replace("/");
     } catch (error: any) {
       const details = error.response?.data?.details;
@@ -64,7 +73,7 @@ export default function RegisterScreen() {
     >
       <View style={styles.overlay} />
       <Image source={require("../assets/ustp-logo.png")} style={styles.logo} resizeMode="contain" />
-      <Text style={styles.brandTitle}>ChatDesk</Text>
+      <BrandTitle style={styles.brandTitle} />
       <Text style={styles.subtitle}>Create your student account</Text>
 
       <View style={styles.card}>
@@ -81,6 +90,13 @@ export default function RegisterScreen() {
           placeholderTextColor={darkTheme.textMuted}
           value={lastName}
           onChangeText={setLastName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="School ID"
+          placeholderTextColor={darkTheme.textMuted}
+          value={schoolId}
+          onChangeText={setSchoolId}
         />
         <TextInput
           style={styles.input}
@@ -163,8 +179,6 @@ const styles = StyleSheet.create({
   logo: { width: 90, height: 90, marginBottom: 4 },
   brandTitle: {
     fontSize: 26,
-    fontFamily: "RobotoSlab_700Bold",
-    color: colors.white,
     textShadowColor: "rgba(0, 0, 0, 0.35)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 6,

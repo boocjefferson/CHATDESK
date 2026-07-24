@@ -44,7 +44,7 @@ const createStyles = (colors: ReturnType<typeof useTheme>["colors"]) =>
       paddingHorizontal: 20,
       paddingVertical: 16,
     },
-    title: { fontSize: 18, fontFamily: "RobotoSlab_700Bold", color: colors.accentText },
+    title: { fontSize: 18, fontFamily: "PlusJakartaSans_700Bold", color: colors.accentText },
     row: {
       flexDirection: "row",
       alignItems: "center",

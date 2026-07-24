@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { router } from "expo-router";
+import { BrandTitle } from "../components/brand-title";
 import { useAuth } from "../context/AuthContext";
 import { colors, darkTheme } from "../theme/colors";
 
@@ -41,7 +42,7 @@ export default function LoginScreen() {
     >
       <View style={styles.overlay} />
       <Image source={require("../assets/ustp-logo.png")} style={styles.logo} resizeMode="contain" />
-      <Text style={styles.brandTitle}>ChatDesk</Text>
+      <BrandTitle style={styles.brandTitle} />
 
       <View style={styles.card}>
         <TextInput
@@ -96,8 +97,6 @@ const styles = StyleSheet.create({
   logo: { width: 120, height: 120, marginBottom: 8 },
   brandTitle: {
     fontSize: 30,
-    fontFamily: "RobotoSlab_700Bold",
-    color: colors.white,
     marginBottom: 20,
     textShadowColor: "rgba(0, 0, 0, 0.35)",
     textShadowOffset: { width: 0, height: 1 },

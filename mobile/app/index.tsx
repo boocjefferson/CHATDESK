@@ -1,5 +1,6 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -13,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BrandTitle } from "../components/brand-title";
 import { NavMenu } from "../components/nav-menu";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -76,9 +78,9 @@ export default function StudentChatScreen() {
           >
             <MaterialIcons name="menu" size={26} color={colors.accentText} />
           </Pressable>
-          <Text style={styles.title}>ChatDesk</Text>
+          <BrandTitle style={styles.title} />
           <Pressable
-            onPress={() => setIsMenuOpen(true)}
+            onPress={() => router.push("/profile")}
             hitSlop={12}
             style={({ pressed }) => [styles.avatar, pressed && styles.pressedIcon]}
           >
@@ -189,7 +191,7 @@ const createStyles = (colors: ThemePalette) =>
       paddingVertical: 16,
     },
     pressedIcon: { opacity: 0.5 },
-    title: { fontSize: 20, fontFamily: "RobotoSlab_700Bold", color: colors.accentText },
+    title: { fontSize: 20 },
     avatar: {
       width: 30,
       height: 30,
@@ -211,7 +213,7 @@ const createStyles = (colors: ThemePalette) =>
     welcomeTitle: {
       fontSize: 28,
       lineHeight: 36,
-      fontFamily: "RobotoSlab_700Bold",
+      fontFamily: "PlusJakartaSans_700Bold",
       color: colors.textPrimary,
       textAlign: "center",
     },
