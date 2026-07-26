@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const CATEGORIES = ["Enrollment", "Scholarship", "Clearance", "Discipline", "General"];
+export const CATEGORIES = ["Enrollment", "Scholarship", "Clearance", "Discipline", "General"];
 
 export default function FaqFormModal({ initialFaq, onSave, onClose }) {
   const [intentKeyword, setIntentKeyword] = useState(initialFaq?.intent_keyword ?? "");

@@ -11,6 +11,7 @@ type Ticket = {
   subject_category: string;
   issue_description: string;
   status: string;
+  resolution: string | null;
   created_at: string;
 };
 
@@ -32,7 +33,10 @@ export default function TicketsScreen() {
   }, []);
 
   const handleView = (ticket: Ticket) => {
-    Alert.alert(ticket.subject_category, ticket.issue_description);
+    Alert.alert(
+      ticket.subject_category,
+      `You asked: ${ticket.issue_description}\n\nAnswer: ${ticket.resolution ?? "No response yet."}`
+    );
   };
 
   return (

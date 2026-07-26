@@ -3,10 +3,9 @@ import { useAuth } from "../context/AuthContext.jsx";
 import ustpLogo from "../assets/ustp-logo.png";
 
 // Matches the sidebar in ui-prototype/admin_ticket_board.png and
-// admin_faq_management.png exactly. User Management and Analytics Overview
-// are shown per the prototype but are not built this sprint (Sprint 2+).
+// admin_faq_management.png exactly.
 const navItems = [
-  { label: "User Management", to: "/users", enabled: false },
+  { label: "User Management", to: "/users", enabled: true },
   { label: "Tickets", to: "/tickets", enabled: true },
   { label: "FAQs", to: "/faqs", enabled: true },
   { label: "Analytics Overview", to: "/analytics", enabled: true },

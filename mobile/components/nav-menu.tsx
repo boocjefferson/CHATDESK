@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -36,6 +37,8 @@ const MENU_ITEMS: { label: string; icon: keyof typeof MaterialIcons.glyphMap }[]
 const PANEL_WIDTH_RATIO = 0.62;
 const ANIMATION_DURATION = 260;
 const SUS_ROW_HEIGHT = 42;
+const SUS_SURVEY_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSeygl0FHqVdkRuuLLCEImGS5ExyRKjZnNO7XngacoOj5pNkGA/viewform?usp=publish-editor";
 
 type NavMenuProps = {
   visible: boolean;
@@ -122,6 +125,13 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
     Alert.alert(label, "Coming soon.");
   };
 
+  const handleOpenSusSurvey = () => {
+    onClose();
+    Linking.openURL(SUS_SURVEY_URL).catch(() => {
+      Alert.alert("Unable to open link", "Please check your internet connection and try again.");
+    });
+  };
+
   const handleResumeSession = (sessionId: string) => {
     resumeSession(sessionId);
     onClose();
@@ -180,9 +190,14 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
                 ) : null}
               </Pressable>
             ))}
-            <Animated.View style={[styles.subMenuRow, susRowStyle]}>
-              <MaterialIcons name="poll" size={18} color={colors.accentText} />
-              <Text style={styles.subMenuLabel}>SUS Survey</Text>
+            <Animated.View style={[styles.subMenuContainer, susRowStyle]}>
+              <Pressable
+                style={({ pressed }) => [styles.subMenuRow, pressed && styles.subMenuRowPressed]}
+                onPress={handleOpenSusSurvey}
+              >
+                <MaterialIcons name="poll" size={18} color={colors.accentText} />
+                <Text style={styles.subMenuLabel}>SUS Survey</Text>
+              </Pressable>
             </Animated.View>
           </View>
 
@@ -257,13 +272,17 @@ const createStyles = (colors: ThemePalette) =>
       paddingVertical: 10,
     },
     menuLabel: { flex: 1, fontFamily: "Montserrat_400Regular", fontSize: 15, color: colors.textPrimary },
+    subMenuContainer: {
+      overflow: "hidden",
+      justifyContent: "center",
+    },
     subMenuRow: {
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
       paddingLeft: 32,
-      overflow: "hidden",
     },
+    subMenuRowPressed: { opacity: 0.6 },
     subMenuLabel: { fontFamily: "Montserrat_400Regular", fontSize: 14, color: colors.textSecondary },
     historyHeading: {
       fontFamily: "Montserrat_700Bold",

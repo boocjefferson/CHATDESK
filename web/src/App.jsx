@@ -6,6 +6,7 @@ import TicketManagement from "./pages/TicketManagement.jsx";
 import FaqManagement from "./pages/FaqManagement.jsx";
 import AdminSettings from "./pages/AdminSettings.jsx";
 import AnalyticsOverview from "./pages/AnalyticsOverview.jsx";
+import UserManagement from "./pages/UserManagement.jsx";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         }
       >
         <Route index element={<Navigate to="/tickets" replace />} />
+        <Route path="users" element={<UserManagement />} />
         <Route path="tickets" element={<TicketManagement />} />
         <Route path="faqs" element={<FaqManagement />} />
         <Route path="analytics" element={<AnalyticsOverview />} />
