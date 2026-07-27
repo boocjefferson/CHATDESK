@@ -4,6 +4,10 @@ import UserFormModal from "../components/UserFormModal.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
+function initialsFor(firstName, lastName) {
+  return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
+}
+
 export default function UserManagement() {
   const { currentUser } = useAuth();
   const [users, setUsers] = useState([]);
@@ -73,46 +77,50 @@ export default function UserManagement() {
 
   return (
     <section>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-bold text-navy">User Management</h3>
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search"
-            className="rounded-full border border-gray-300 px-4 py-1.5 text-sm text-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gold/40"
-          />
-          <button
-            type="button"
-            onClick={() => {
-              setEditingUser(null);
-              setIsModalOpen(true);
-            }}
-            className="rounded-full border border-gold px-4 py-1.5 text-sm font-medium text-navy transition-colors hover:bg-gold hover:text-white"
-          >
-            Add User
-          </button>
-        </div>
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <StatTile
+          label="Total Users"
+          value={totalCount}
+          accentClass="bg-navy/10 text-navy"
+          icon={
+            <path
+              d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          }
+        />
+        <StatTile
+          label="Active Users"
+          value={activeCount}
+          accentClass="bg-status-resolved/15 text-status-resolved"
+          icon={
+            <path
+              d="m20 6-11 11-5-5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          }
+        />
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
-          <p className="text-sm text-gray-500">Total Users</p>
-          <p className="text-2xl font-bold text-navy">{totalCount}</p>
-        </div>
-        <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
-          <p className="text-sm text-gray-500">Active Users</p>
-          <p className="text-2xl font-bold text-navy">{activeCount}</p>
-        </div>
-      </div>
-
-      <div className="mb-4 flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <span className="text-sm font-semibold text-navy">Filters</span>
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <h3 className="mr-auto text-lg font-bold text-navy">All Users</h3>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search"
+          className="rounded-full border border-gray-200 px-4 py-1.5 text-sm text-navy placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gold/40"
+        />
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="rounded-full border border-gray-300 px-3 py-1 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
+          className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
         >
           <option value="All">All Roles</option>
           <option value="student">Student</option>
@@ -121,73 +129,95 @@ export default function UserManagement() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="rounded-full border border-gray-300 px-3 py-1 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
+          className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
         >
           <option value="All">All Status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-        <div className="flex-1" />
         <button
           type="button"
           onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
-          className="rounded-full border border-gray-300 px-3 py-1 text-sm text-navy transition-colors hover:border-gold"
+          className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy transition-colors hover:border-gold"
         >
-          Sort: Name {sortDirection === "asc" ? "A-Z" : "Z-A"}
+          Sort: {sortDirection === "asc" ? "A-Z" : "Z-A"}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setEditingUser(null);
+            setIsModalOpen(true);
+          }}
+          className="rounded-full bg-gold px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-95"
+        >
+          + Add User
         </button>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-gray-200 bg-navy text-sm text-white">
-              <th className="px-4 py-3 font-semibold">Full Name</th>
-              <th className="px-4 py-3 font-semibold">Email</th>
-              <th className="px-4 py-3 font-semibold">ID</th>
-              <th className="px-4 py-3 font-semibold">Role</th>
-              <th className="px-4 py-3 font-semibold">Status</th>
-              <th className="px-4 py-3 font-semibold">Last Login</th>
-              <th className="px-4 py-3 text-right font-semibold">Actions</th>
+            <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              <th className="px-5 py-3">Name</th>
+              <th className="px-5 py-3">School ID</th>
+              <th className="px-5 py-3">Role</th>
+              <th className="px-5 py-3">Status</th>
+              <th className="px-5 py-3">Last Login</th>
+              <th className="px-5 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {visibleUsers.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-gray-500">
+                <td colSpan={6} className="px-5 py-14 text-center text-sm text-gray-500">
                   No users found.
                 </td>
               </tr>
             ) : (
               visibleUsers.map((user) => {
                 const isSelf = user.user_id === currentUser?.user_id;
+                const isAdmin = user.role === "admin";
                 return (
                   <tr
                     key={user.user_id}
-                    className="border-b border-gray-100 text-navy transition-colors last:border-0 hover:bg-gray-50"
+                    className="border-b border-gray-50 text-navy transition-colors last:border-0 hover:bg-gray-50/80"
                   >
-                    <td className="px-4 py-3">
-                      {user.first_name} {user.last_name}
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                            isAdmin ? "bg-gold/15 text-gold" : "bg-navy/10 text-navy"
+                          }`}
+                        >
+                          {initialsFor(user.first_name, user.last_name)}
+                        </div>
+                        <div>
+                          <p className="font-medium leading-tight">
+                            {user.first_name} {user.last_name}
+                          </p>
+                          <p className="text-xs leading-tight text-gray-400">{user.email}</p>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-4 py-3">{user.email}</td>
-                    <td className="px-4 py-3">{user.school_id || "—"}</td>
-                    <td className="px-4 py-3 capitalize">{user.role}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5 text-gray-500">{user.school_id || "—"}</td>
+                    <td className="px-5 py-3.5 capitalize text-gray-500">{user.role}</td>
+                    <td className="px-5 py-3.5">
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           user.is_active
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-200 text-gray-600"
+                            ? "bg-status-resolved/15 text-status-resolved"
+                            : "bg-gray-100 text-gray-500"
                         }`}
                       >
                         {user.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5 text-gray-500">
                       {user.last_login
                         ? new Date(user.last_login).toLocaleDateString()
                         : "Never"}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5">
                       {!isSelf && (
                         <div className="flex items-center justify-end gap-3">
                           <button
@@ -196,7 +226,7 @@ export default function UserManagement() {
                               setIsModalOpen(true);
                             }}
                             aria-label="Edit user"
-                            className="text-gray-500 transition-colors hover:text-blue-600"
+                            className="text-gray-400 transition-colors hover:text-status-active"
                           >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path
@@ -211,7 +241,7 @@ export default function UserManagement() {
                           <button
                             onClick={() => handleDelete(user.user_id)}
                             aria-label="Delete user"
-                            className="text-gray-500 transition-colors hover:text-red-500"
+                            className="text-gray-400 transition-colors hover:text-red-500"
                           >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path
@@ -242,5 +272,19 @@ export default function UserManagement() {
         />
       )}
     </section>
+  );
+}
+
+function StatTile({ label, value, icon, accentClass }) {
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${accentClass}`}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {icon}
+        </svg>
+      </div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="mt-1 text-3xl font-bold tabular-nums text-navy">{value}</p>
+    </div>
   );
 }
