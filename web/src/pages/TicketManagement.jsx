@@ -6,6 +6,7 @@ export default function TicketManagement() {
   const [tickets, setTickets] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const loadTickets = () => {
     setIsLoading(true);
@@ -29,6 +30,14 @@ export default function TicketManagement() {
     loadTickets();
   };
 
+  const filteredTickets = tickets.filter((ticket) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      ticket.issue_description.toLowerCase().includes(term) ||
+      ticket.subject_category.toLowerCase().includes(term) ||
+      String(ticket.user_id).includes(term)
+    );
+  });
   if (isLoading) return <p>Loading tickets...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
@@ -39,6 +48,8 @@ export default function TicketManagement() {
         <input
           type="text"
           placeholder="Search"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           className="rounded-full border border-gray-300 px-4 py-1 text-sm text-navy placeholder:text-gray-400"
         />
       </div>
@@ -55,7 +66,7 @@ export default function TicketManagement() {
             </tr>
           </thead>
           <tbody>
-            {tickets.map((ticket) => (
+            {filteredTickets.map((ticket) => (
               <tr key={ticket.ticket_id} className="border-b border-gray-200 text-navy last:border-0">
                 <td className="px-4 py-3">{ticket.issue_description}</td>
                 <td className="px-4 py-3">Student #{ticket.user_id}</td>
@@ -79,6 +90,9 @@ export default function TicketManagement() {
             ))}
           </tbody>
         </table>
+        {filteredTickets.length === 0 && (
+          <p className="p-4 text-center text-sm text-gray-500">No tickets match your search.</p>
+        )}
       </div>
     </section>
   );

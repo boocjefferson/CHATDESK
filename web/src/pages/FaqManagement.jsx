@@ -8,6 +8,7 @@ export default function FaqManagement() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const loadFaqs = () => {
     setIsLoading(true);
@@ -35,6 +36,14 @@ export default function FaqManagement() {
   loadFaqs();
 };
 
+  const filteredFaqs = faqs.filter((faq) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      faq.question_text.toLowerCase().includes(term) ||
+      faq.answer_content.toLowerCase().includes(term) ||
+      faq.category.toLowerCase().includes(term)
+    );
+  });
   if (isLoading) return <p>Loading FAQs...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
@@ -46,6 +55,8 @@ export default function FaqManagement() {
           <input
             type="text"
             placeholder="Search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="rounded-full border border-gray-300 px-4 py-1 text-sm text-navy placeholder:text-gray-400"
           />
           <button
@@ -71,7 +82,7 @@ export default function FaqManagement() {
             </tr>
           </thead>
           <tbody>
-            {faqs.map((faq) => (
+            {filteredFaqs.map((faq) => (
               <tr key={faq.faq_id} className="border-b border-gray-200 text-navy last:border-0">
                 <td className="px-4 py-3">{faq.question_text}</td>
                 <td className="px-4 py-3">{faq.category}</td>
@@ -96,6 +107,9 @@ export default function FaqManagement() {
             ))}
           </tbody>
         </table>
+        {filteredFaqs.length === 0 && (
+          <p className="p-4 text-center text-sm text-gray-500">No FAQs match your search.</p>
+        )}
 </div>
 
       {isModalOpen && (
