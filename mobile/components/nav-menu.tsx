@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -20,23 +21,24 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { BrandTitle } from "./brand-title";
+import { useChat } from "../context/ChatContext";
 import { useTheme } from "../context/ThemeContext";
 import type { ThemePalette } from "../theme/colors";
-
-// "Recent Chat N" rows are static placeholders matching the approved
-// wireframe - there's no chat history endpoint yet to source real data
-// from (backend only has auth + faqs so far).
-const RECENT_CHATS = Array.from({ length: 11 }, (_, i) => `Recent Chat ${i + 1}`);
 
 const MENU_ITEMS: { label: string; icon: keyof typeof MaterialIcons.glyphMap }[] = [
   { label: "Start Chat", icon: "chat-bubble-outline" },
   { label: "Settings", icon: "settings" },
   { label: "View Tickets", icon: "confirmation-number" },
+  { label: "Announcements", icon: "campaign" },
   { label: "More", icon: "more-horiz" },
 ];
 
 const PANEL_WIDTH_RATIO = 0.62;
 const ANIMATION_DURATION = 260;
+const SUS_ROW_HEIGHT = 42;
+const SUS_SURVEY_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSeygl0FHqVdkRuuLLCEImGS5ExyRKjZnNO7XngacoOj5pNkGA/viewform?usp=publish-editor";
 
 type NavMenuProps = {
   visible: boolean;
@@ -48,11 +50,14 @@ type NavMenuProps = {
 export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProps) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
+  const { history, resumeSession, startNewChat } = useChat();
   const { width } = useWindowDimensions();
   const panelWidth = width * PANEL_WIDTH_RATIO;
   const [isMounted, setIsMounted] = useState(visible);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMoreExpanded, setIsMoreExpanded] = useState(false);
   const translateX = useSharedValue(-panelWidth);
+  const moreProgress = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
@@ -76,8 +81,18 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
     transform: [{ translateX: translateX.value }],
   }));
 
+  const susRowStyle = useAnimatedStyle(() => ({
+    height: moreProgress.value * SUS_ROW_HEIGHT,
+    opacity: moreProgress.value,
+  }));
+
+  const chevronStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${moreProgress.value * 180}deg` }],
+  }));
+
   const handleMenuItemPress = (label: string) => {
     if (label === "Start Chat") {
+      startNewChat();
       onClose();
       return;
     }
@@ -91,7 +106,35 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
       router.push("/tickets");
       return;
     }
+    if (label === "Announcements") {
+      onClose();
+      router.push("/announcements");
+      return;
+    }
+    if (label === "More") {
+      setIsMoreExpanded((prev) => {
+        const next = !prev;
+        moreProgress.value = withTiming(next ? 1 : 0, {
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+        });
+        return next;
+      });
+      return;
+    }
     Alert.alert(label, "Coming soon.");
+  };
+
+  const handleOpenSusSurvey = () => {
+    onClose();
+    Linking.openURL(SUS_SURVEY_URL).catch(() => {
+      Alert.alert("Unable to open link", "Please check your internet connection and try again.");
+    });
+  };
+
+  const handleResumeSession = (sessionId: string) => {
+    resumeSession(sessionId);
+    onClose();
   };
 
   const handleLogout = async () => {
@@ -117,10 +160,17 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
             <Pressable onPress={onClose} hitSlop={12}>
               <MaterialIcons name="close" size={24} color={colors.accentText} />
             </Pressable>
-            <Text style={styles.title}>ChatDesk</Text>
-            <View style={styles.avatar}>
+            <BrandTitle style={styles.title} />
+            <Pressable
+              style={styles.avatar}
+              hitSlop={12}
+              onPress={() => {
+                onClose();
+                router.push("/profile");
+              }}
+            >
               <Text style={styles.avatarText}>{userInitial}</Text>
-            </View>
+            </Pressable>
           </View>
 
           <View style={styles.menuList}>
@@ -129,21 +179,46 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
                 key={item.label}
                 style={styles.menuRow}
                 onPress={() => handleMenuItemPress(item.label)}
+                accessibilityState={item.label === "More" ? { expanded: isMoreExpanded } : undefined}
               >
                 <MaterialIcons name={item.icon} size={20} color={colors.accentText} />
                 <Text style={styles.menuLabel}>{item.label}</Text>
+                {item.label === "More" ? (
+                  <Animated.View style={chevronStyle}>
+                    <MaterialIcons name="expand-more" size={20} color={colors.accentText} />
+                  </Animated.View>
+                ) : null}
               </Pressable>
             ))}
+            <Animated.View style={[styles.subMenuContainer, susRowStyle]}>
+              <Pressable
+                style={({ pressed }) => [styles.subMenuRow, pressed && styles.subMenuRowPressed]}
+                onPress={handleOpenSusSurvey}
+              >
+                <MaterialIcons name="poll" size={18} color={colors.accentText} />
+                <Text style={styles.subMenuLabel}>SUS Survey</Text>
+              </Pressable>
+            </Animated.View>
           </View>
 
           <Text style={styles.historyHeading}>History</Text>
-          <ScrollView style={styles.historyList} contentContainerStyle={styles.historyListContent}>
-            {RECENT_CHATS.map((label) => (
-              <View key={label} style={styles.historyRow}>
-                <Text style={styles.historyLabel}>{label}</Text>
-              </View>
-            ))}
-          </ScrollView>
+          {history.length === 0 ? (
+            <Text style={styles.historyEmpty}>No recent chats yet.</Text>
+          ) : (
+            <ScrollView style={styles.historyList} contentContainerStyle={styles.historyListContent}>
+              {history.map((session) => (
+                <Pressable
+                  key={session.id}
+                  style={styles.historyRow}
+                  onPress={() => handleResumeSession(session.id)}
+                >
+                  <Text style={styles.historyLabel} numberOfLines={1}>
+                    {session.title}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          )}
 
           <View style={styles.footer}>
             <Pressable style={styles.logoutButton} onPress={handleLogout} disabled={isLoggingOut}>
@@ -177,7 +252,7 @@ const createStyles = (colors: ThemePalette) =>
       justifyContent: "space-between",
       paddingVertical: 16,
     },
-    title: { fontSize: 17, fontFamily: "RobotoSlab_700Bold", color: colors.accentText },
+    title: { fontSize: 17 },
     avatar: {
       width: 26,
       height: 26,
@@ -189,8 +264,26 @@ const createStyles = (colors: ThemePalette) =>
     },
     avatarText: { fontFamily: "Montserrat_700Bold", color: colors.accentText, fontSize: 11 },
     menuList: { marginTop: 4 },
-    menuRow: { flexDirection: "row", alignItems: "center", gap: 12, paddingVertical: 10 },
-    menuLabel: { fontFamily: "Montserrat_400Regular", fontSize: 15, color: colors.textPrimary },
+    menuRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      paddingVertical: 10,
+    },
+    menuLabel: { flex: 1, fontFamily: "Montserrat_400Regular", fontSize: 15, color: colors.textPrimary },
+    subMenuContainer: {
+      overflow: "hidden",
+      justifyContent: "center",
+    },
+    subMenuRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingLeft: 32,
+    },
+    subMenuRowPressed: { opacity: 0.6 },
+    subMenuLabel: { fontFamily: "Montserrat_400Regular", fontSize: 14, color: colors.textSecondary },
     historyHeading: {
       fontFamily: "Montserrat_700Bold",
       fontSize: 14,
@@ -202,6 +295,11 @@ const createStyles = (colors: ThemePalette) =>
     historyListContent: { paddingBottom: 12 },
     historyRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
     historyLabel: { fontFamily: "Montserrat_400Regular", fontSize: 14, color: colors.textPrimary },
+    historyEmpty: {
+      fontFamily: "Montserrat_400Regular",
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
     footer: { alignItems: "flex-end", paddingVertical: 14 },
     logoutButton: {
       borderWidth: 1,

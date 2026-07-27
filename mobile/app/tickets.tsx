@@ -11,6 +11,7 @@ type Ticket = {
   subject_category: string;
   issue_description: string;
   status: string;
+  resolution: string | null;
   created_at: string;
 };
 
@@ -32,7 +33,10 @@ export default function TicketsScreen() {
   }, []);
 
   const handleView = (ticket: Ticket) => {
-    Alert.alert(ticket.subject_category, ticket.issue_description);
+    Alert.alert(
+      ticket.subject_category,
+      `You asked: ${ticket.issue_description}\n\nAnswer: ${ticket.resolution ?? "No response yet."}`
+    );
   };
 
   return (
@@ -104,7 +108,7 @@ const createStyles = (colors: ThemePalette) =>
       paddingHorizontal: 20,
       paddingBottom: 16,
     },
-    title: { fontSize: 22, fontFamily: "RobotoSlab_700Bold", color: colors.textPrimary },
+    title: { fontSize: 22, fontFamily: "PlusJakartaSans_700Bold", color: colors.textPrimary },
     centerState: {
       marginTop: 40,
       textAlign: "center",
@@ -119,7 +123,12 @@ const createStyles = (colors: ThemePalette) =>
       paddingHorizontal: 20,
       paddingBottom: 12,
     },
-    columnHeader: { fontFamily: "Montserrat_700Bold", fontSize: 15, color: colors.textPrimary },
+    columnHeader: {
+      fontFamily: "Montserrat_700Bold",
+      fontSize: 15,
+      color: colors.textPrimary,
+      textAlign: "center",
+    },
     labelColumn: { flex: 1.1 },
     statusColumn: { flex: 1, alignItems: "center" },
     actionColumn: { flex: 1, alignItems: "center" },

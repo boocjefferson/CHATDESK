@@ -39,6 +39,7 @@ Request:
   "password": "securepassword123",
   "first_name": "Jefferson",
   "last_name": "Booc",
+  "school_id": "2021-00123",
   "course": "BSIT"
 }
 Response 201:
@@ -49,11 +50,14 @@ Response 201:
     "first_name": "Jefferson",
     "last_name": "Booc",
     "role": "student", 
-    "course": "BSIT" 
+    "course": "BSIT",
+    "school_id": "2021-00123"
   },
   "access": "jwt_access_token_string",
   "refresh": "jwt_refresh_token_string"
 }
+# school_id must be unique - register returns 400 with a school_id validation
+# error if it's already taken (same pattern as the email uniqueness check).
 
 ### POST /api/v1/auth/login/
 Public.
@@ -79,9 +83,28 @@ Auth required. Returns the current authenticated user's profile.
   "last_name": "Booc",
   "role": "student",
   "course": "BSIT",
+  "school_id": "2021-00123",
+  "is_active": true,
+  "last_login": "2026-07-20T09:12:00Z",
   "created_at": "2026-06-15T08:00:00Z"
 }
-# Note: course is nullable for admin accounts.
+# Note: course and school_id are nullable for admin accounts. school_id is
+# unique per user (added post-Sprint-1-baseline; not on the original ERD -
+# flagged for the team to fold into the next ERD revision). is_active and
+# last_login are Django's built-in AbstractUser fields, now surfaced for the
+# admin User Management screen below - last_login is null until the user's
+# first login after this field started being stamped.
+
+## User Management (Admin Dashboard)
+Admin only. Manages the same tbl_user accounts students log into on mobile -
+deactivating a user here immediately blocks their next login attempt.
+
+Method,Path,Notes
+GET,/api/v1/users/,"List users. ?search= (name/email), ?role=student|admin, ?status=active|inactive."
+POST,/api/v1/users/,"Create a student or admin account directly (admin picks the role; distinct from public self-registration)."
+GET,/api/v1/users/{user_id}/,Detail view.
+PATCH,/api/v1/users/{user_id}/,"Edit first_name/last_name/role/course/school_id/is_active. An admin cannot deactivate or demote their own account (403)."
+DELETE,/api/v1/users/{user_id}/,"Remove an account. An admin cannot delete their own account (403)."
 
 ## FAQ (Knowledge Base)
 {
@@ -149,9 +172,14 @@ Admin only. Returns raw logs for system analytics.
   "subject_category": "Unresolved Inquiry",
   "issue_description": "Student asked: 'Paano ko ma-waive ang late enrollment fee ko dahil sa medical emergency?' - AI could not resolve.",
   "status": "pending",
+  "resolution": null,
   "created_at": "2026-06-15T10:16:00Z",
   "resolved_at": null
 }
+# resolution: the admin's written answer, set via PATCH alongside status. Null
+# until an admin responds. Not on the original ERD - added post-Sprint-1-
+# baseline to fulfill the "add resolution notes" PATCH behavior already
+# described below; flagged for the team to fold into the next ERD revision.
 
 Method,Path,Roles,Notes
 GET,/api/v1/tickets/,admin,"List all tickets, supports ?status= and ?category= filters."

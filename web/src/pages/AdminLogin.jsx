@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import ustpLogo from "../assets/ustp-logo.png";
+import loginBg from "../assets/image.png";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -30,11 +31,23 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4">
-      <img src={ustpLogo} alt="USTP logo" className="mb-4 h-28 w-auto" />
-      <h1 className="mb-6 text-3xl font-extrabold text-navy">ChatDesk Admin</h1>
+    <div
+      className="relative flex min-h-screen flex-col items-center justify-center bg-cover bg-center px-4"
+      style={{ backgroundImage: `url(${loginBg})` }}
+    >
+      <div className="absolute inset-0 bg-navy-dark/50" />
 
-      <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-2xl border border-gray-300 p-6">
+      <img src={ustpLogo} alt="USTP logo" className="relative z-10 mb-4 h-28 w-auto" />
+      <h1 className="relative z-10 mb-6 font-plus-jakarta text-3xl font-bold [text-shadow:0_1px_6px_rgba(0,0,0,0.35)]">
+        <span className="text-white">Chat</span>
+        <span className="text-gold">Desk</span>
+        <span className="text-white"> Admin</span>
+      </h1>
+
+      <form
+        onSubmit={handleSubmit}
+        className="relative z-10 w-full max-w-sm rounded-2xl border border-gray-200 bg-white/95 p-6 shadow-lg"
+      >
         <div className="relative mb-4">
           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-navy">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
