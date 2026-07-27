@@ -10,6 +10,7 @@ const navItems = [
   { label: "Tickets", to: "/tickets", enabled: true },
   { label: "FAQs", to: "/faqs", enabled: true },
   { label: "Analytics Overview", to: "/analytics", enabled: true },
+  { label: "Inquiry Logs", to: "/logs", enabled: true },
   { label: "Settings", to: "/settings", enabled: true },
 ];
 
