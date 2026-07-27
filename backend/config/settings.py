@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "tickets",
     "analytics",
     "announcements",
+    "phases",
 ]
 
 MIDDLEWARE = [
