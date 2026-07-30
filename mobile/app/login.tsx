@@ -65,6 +65,10 @@ export default function LoginScreen() {
 
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
+        <Pressable onPress={() => router.push("/forgot-password")}>
+          <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+        </Pressable>
+
         <Pressable style={styles.button} onPress={handleLogin} disabled={isSubmitting}>
           {isSubmitting ? (
             <ActivityIndicator color={colors.white} />
@@ -143,4 +147,12 @@ const styles = StyleSheet.create({
   },
   signupLink: { fontFamily: "Montserrat_700Bold", color: colors.white },
   errorText: { color: colors.errorRed, fontSize: 13, marginBottom: 8, textAlign: "center" },
+  forgotPasswordText: {
+    textAlign: "right",
+    marginTop: -4,
+    marginBottom: 12,
+    fontSize: 13,
+    fontFamily: "Montserrat_400Regular",
+    color: colors.gold,
+  },
 });

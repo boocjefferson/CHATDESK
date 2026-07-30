@@ -75,6 +75,37 @@ Request: { "refresh": "jwt_refresh_token_string" } → Response 205.
 ### GET /api/v1/auth/me/
 Auth required. Returns the current authenticated user's profile.
 
+### POST /api/v1/auth/password-reset/request/
+Public. Mobile "Forgot Password" step 1. Emails a 6-digit code (10 min expiry)
+to the account if one exists and is active. Always responds the same way
+regardless of whether the email is registered - never confirms/denies
+account existence.
+
+Request: { "email": "student@gmail.com" }
+Response 200: { "message": "If that email is registered, a password reset code has been sent." }
+# Dev fallback: until backend/.env's EMAIL_HOST_PASSWORD holds a real Gmail
+# App Password (settings.PASSWORD_RESET_EMAIL_ENABLED is False), the response
+# also includes "dev_code": "123456" so the flow is testable without real
+# email delivery. Remove reliance on dev_code once email sending is live -
+# it will stop appearing automatically once the App Password is set.
+
+### POST /api/v1/auth/password-reset/confirm/
+Public. Mobile "Forgot Password" step 2. Verifies the emailed code and sets
+a new password. Code is single-use; a successful reset invalidates any
+other outstanding codes for that user.
+
+Request:
+{
+  "email": "student@gmail.com",
+  "code": "123456",
+  "new_password": "newsecurepassword123"
+}
+Response 200: { "message": "Password has been reset. You can now log in." }
+Response 400 (wrong/expired/already-used code, or unknown email):
+{ "error": "validation_error", "message": "Invalid request parameters.", "details": { "code": ["Invalid or expired code."] } }
+# Not on the original ERD - tbl_password_reset_code added post-Sprint-1-baseline
+# to support this flow; flagged for the team to fold into the next ERD revision.
+
 ## User Profile (Referenced by other endpoints)
 {
   "user_id": 1,
