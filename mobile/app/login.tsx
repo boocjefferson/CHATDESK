@@ -41,7 +41,7 @@ export default function LoginScreen() {
       resizeMode="cover"
     >
       <View style={styles.overlay} />
-      <Image source={require("../assets/ustp-logo.png")} style={styles.logo} resizeMode="contain" />
+      <Image source={require("../assets/1.png")} style={styles.logo} resizeMode="contain" />
       <BrandTitle style={styles.brandTitle} />
 
       <View style={styles.card}>
@@ -64,6 +64,10 @@ export default function LoginScreen() {
         />
 
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+        <Pressable onPress={() => router.push("/forgot-password")}>
+          <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+        </Pressable>
 
         <Pressable style={styles.button} onPress={handleLogin} disabled={isSubmitting}>
           {isSubmitting ? (
@@ -94,7 +98,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(10, 16, 46, 0.45)",
   },
-  logo: { width: 120, height: 120, marginBottom: 8 },
+  logo: { width: 120, height: 120, marginBottom: 8, borderRadius: 24 },
   brandTitle: {
     fontSize: 30,
     marginBottom: 20,
@@ -143,4 +147,12 @@ const styles = StyleSheet.create({
   },
   signupLink: { fontFamily: "Montserrat_700Bold", color: colors.white },
   errorText: { color: colors.errorRed, fontSize: 13, marginBottom: 8, textAlign: "center" },
+  forgotPasswordText: {
+    textAlign: "right",
+    marginTop: -4,
+    marginBottom: 12,
+    fontSize: 13,
+    fontFamily: "Montserrat_400Regular",
+    color: colors.gold,
+  },
 });

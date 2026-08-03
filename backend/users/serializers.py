@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import update_last_login
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -102,6 +103,30 @@ class LoginSerializer(serializers.Serializer):
     def to_representation(self, instance):
         user = instance["user"]
         return {"user": UserSerializer(user).data, **_tokens_for_user(user)}
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """POST /api/v1/auth/password-reset/request/ - public."""
+
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        return value.lower().strip()
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """POST /api/v1/auth/password-reset/confirm/ - public."""
+
+    email = serializers.EmailField()
+    code = serializers.CharField(max_length=6, min_length=6)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate_email(self, value):
+        return value.lower().strip()
+
+    def validate_new_password(self, value):
+        validate_password(value)
+        return value
 
 
 class UserAdminUpdateSerializer(serializers.ModelSerializer):

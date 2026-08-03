@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 
 from .managers import UserManager
 
@@ -55,3 +56,24 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.email} ({self.role})"
+
+
+class PasswordResetCode(models.Model):
+    """
+    tbl_password_reset_code - short-lived 6-digit OTP emailed to a user for
+    the mobile "Forgot Password" flow. code_hash is hashed the same way as
+    User.password (django.contrib.auth.hashers) so the raw code is never
+    stored at rest.
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="password_reset_codes")
+    code_hash = models.CharField(max_length=128)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "tbl_password_reset_code"
+
+    def is_valid(self):
+        return not self.is_used and self.expires_at > timezone.now()

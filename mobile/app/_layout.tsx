@@ -15,7 +15,8 @@ function RootNavigator() {
   useEffect(() => {
     if (isLoading) return;
 
-    const isAuthScreen = pathname === "/login" || pathname === "/register";
+    const isAuthScreen =
+      pathname === "/login" || pathname === "/register" || pathname === "/forgot-password";
 
     if (!currentUser && !isAuthScreen) {
       router.replace("/login");
@@ -42,6 +43,7 @@ function RootNavigator() {
       <Stack.Screen name="index" />
       <Stack.Screen name="login" />
       <Stack.Screen name="register" />
+      <Stack.Screen name="forgot-password" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="tickets" />
       <Stack.Screen name="profile" />

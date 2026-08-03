@@ -20,7 +20,7 @@ import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
 import { useTheme } from "../context/ThemeContext";
 import axiosClient from "../lib/axiosClient";
-import type { ThemePalette } from "../theme/colors";
+import { colors as brandColors, type ThemePalette } from "../theme/colors";
 
 // Matches the FAQ categories already modeled on the backend
 // (Enrollment, Scholarship, Clearance, Discipline, General).
@@ -39,7 +39,7 @@ type Phase = {
 
 export default function StudentChatScreen() {
   const { currentUser, logout } = useAuth();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = createStyles(colors);
   const { messages, isSending, sendMessage } = useChat();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -84,7 +84,7 @@ export default function StudentChatScreen() {
           >
             <MaterialIcons name="menu" size={26} color={colors.accentText} />
           </Pressable>
-          <BrandTitle style={styles.title} />
+          <BrandTitle style={styles.title} chatColor={isDark ? brandColors.white : brandColors.navy} />
           <Pressable
             onPress={() => router.push("/profile")}
             hitSlop={12}
