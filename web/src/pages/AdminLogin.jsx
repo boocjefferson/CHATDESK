@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import ustpLogo from "../assets/ustp-logo.png";
+import ustpLogo from "../assets/1.png";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -35,7 +35,7 @@ export default function AdminLogin() {
       <div className="flex w-full flex-col justify-center px-8 py-12 sm:px-16 lg:w-[42%] lg:px-20">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-10 flex items-center gap-3">
-            <img src={ustpLogo} alt="USTP logo" className="h-11 w-10 shrink-0 object-contain" />
+            <img src={ustpLogo} alt="ChatDesk logo" className="h-11 w-10 shrink-0 rounded-lg object-contain" />
             <span className="text-xl font-bold text-navy">
               Chat<span className="text-gold">Desk</span>
             </span>

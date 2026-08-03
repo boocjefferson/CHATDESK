@@ -41,7 +41,7 @@ export default function LoginScreen() {
       resizeMode="cover"
     >
       <View style={styles.overlay} />
-      <Image source={require("../assets/ustp-logo.png")} style={styles.logo} resizeMode="contain" />
+      <Image source={require("../assets/1.png")} style={styles.logo} resizeMode="contain" />
       <BrandTitle style={styles.brandTitle} />
 
       <View style={styles.card}>
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(10, 16, 46, 0.45)",
   },
-  logo: { width: 120, height: 120, marginBottom: 8 },
+  logo: { width: 120, height: 120, marginBottom: 8, borderRadius: 24 },
   brandTitle: {
     fontSize: 30,
     marginBottom: 20,

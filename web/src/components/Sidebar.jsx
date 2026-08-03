@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import ustpLogo from "../assets/ustp-logo.png";
+import ustpLogo from "../assets/1.png";
 
 const navItems = [
   {
@@ -96,7 +96,7 @@ export default function Sidebar() {
     <aside className="flex h-screen w-64 shrink-0 flex-col justify-between bg-navy px-5 py-6 text-white">
       <div>
         <div className="mb-8 flex items-center gap-2.5 px-1">
-          <img src={ustpLogo} alt="USTP logo" className="h-9 w-8 shrink-0 object-contain" />
+          <img src={ustpLogo} alt="ChatDesk logo" className="h-9 w-8 shrink-0 rounded-md object-contain" />
           <span className="font-plus-jakarta text-lg font-bold">
             Chat<span className="text-gold">Desk</span>
           </span>

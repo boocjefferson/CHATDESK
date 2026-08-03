@@ -72,7 +72,7 @@ export default function RegisterScreen() {
       resizeMode="cover"
     >
       <View style={styles.overlay} />
-      <Image source={require("../assets/ustp-logo.png")} style={styles.logo} resizeMode="contain" />
+      <Image source={require("../assets/1.png")} style={styles.logo} resizeMode="contain" />
       <BrandTitle style={styles.brandTitle} />
       <Text style={styles.subtitle}>Create your student account</Text>
 
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(10, 16, 46, 0.45)",
   },
-  logo: { width: 90, height: 90, marginBottom: 4 },
+  logo: { width: 90, height: 90, marginBottom: 4, borderRadius: 18 },
   brandTitle: {
     fontSize: 26,
     textShadowColor: "rgba(0, 0, 0, 0.35)",

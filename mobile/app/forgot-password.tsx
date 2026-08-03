@@ -79,7 +79,7 @@ export default function ForgotPasswordScreen() {
       resizeMode="cover"
     >
       <View style={styles.overlay} />
-      <Image source={require("../assets/ustp-logo.png")} style={styles.logo} resizeMode="contain" />
+      <Image source={require("../assets/1.png")} style={styles.logo} resizeMode="contain" />
       <BrandTitle style={styles.brandTitle} />
       <Text style={styles.subtitle}>
         {step === "request" ? "Reset your password" : "Enter the code we emailed you"}
@@ -154,7 +154,7 @@ export default function ForgotPasswordScreen() {
 
             <Pressable onPress={() => setStep("request")}>
               <Text style={styles.signupText}>
-                Didn't get a code? <Text style={styles.signupLink}>Try again</Text>
+                Didn&apos;t get a code? <Text style={styles.signupLink}>Try again</Text>
               </Text>
             </Pressable>
           </>
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(10, 16, 46, 0.45)",
   },
-  logo: { width: 90, height: 90, marginBottom: 4 },
+  logo: { width: 90, height: 90, marginBottom: 4, borderRadius: 18 },
   brandTitle: {
     fontSize: 26,
     textShadowColor: "rgba(0, 0, 0, 0.35)",

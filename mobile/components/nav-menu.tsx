@@ -24,7 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BrandTitle } from "./brand-title";
 import { useChat } from "../context/ChatContext";
 import { useTheme } from "../context/ThemeContext";
-import type { ThemePalette } from "../theme/colors";
+import { colors as brandColors, type ThemePalette } from "../theme/colors";
 
 const MENU_ITEMS: { label: string; icon: keyof typeof MaterialIcons.glyphMap }[] = [
   { label: "Start Chat", icon: "chat-bubble-outline" },
@@ -48,7 +48,7 @@ type NavMenuProps = {
 };
 
 export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = createStyles(colors);
   const { history, resumeSession, startNewChat } = useChat();
   const { width } = useWindowDimensions();
@@ -160,7 +160,7 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
             <Pressable onPress={onClose} hitSlop={12}>
               <MaterialIcons name="close" size={24} color={colors.accentText} />
             </Pressable>
-            <BrandTitle style={styles.title} />
+            <BrandTitle style={styles.title} chatColor={isDark ? brandColors.white : brandColors.navy} />
             <Pressable
               style={styles.avatar}
               hitSlop={12}
