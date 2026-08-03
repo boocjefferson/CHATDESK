@@ -70,6 +70,19 @@ const navItems = [
     ),
   },
   {
+    label: "Announcements",
+    to: "/announcements",
+    icon: (
+      <path
+        d="M4 6h11l4-3v18l-4-3H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1ZM8 15v3a2 2 0 0 0 2 2h1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
     label: "Settings",
     to: "/settings",
     icon: (

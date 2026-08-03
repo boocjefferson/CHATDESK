@@ -18,17 +18,37 @@ class User(AbstractUser):
         STUDENT = "student", "Student"
         ADMIN = "admin", "Admin"
 
-    # USTP course codes - see conversation with Jefferson, adjust list as the
-    # school's official program list is confirmed.
+    # USTP CDO course codes, confirmed by Jefferson against the official
+    # program list. BSN predates that confirmation and isn't on it, but
+    # wasn't asked to be removed - BSBA/BSA were and are gone.
     class Course(models.TextChoices):
+        # Information Technology / Computer Science
         BSIT = "BSIT", "BS Information Technology"
         BSCS = "BSCS", "BS Computer Science"
-        BSN = "BSN", "BS Nursing"
-        BSBA = "BSBA", "BS Business Administration"
-        BSED = "BSED", "BS Secondary Education"
-        BSA = "BSA", "BS Accountancy"
+        BSDS = "BSDS", "BS Data Science"
+        BTCM = "BTCM", "Bachelor in Technology Communication Management"
+        # Engineering
+        BSARCH = "BSARCH", "BS Architecture"
         BSCE = "BSCE", "BS Civil Engineering"
+        BSCPE = "BSCPE", "BS Computer Engineering"
         BSEE = "BSEE", "BS Electrical Engineering"
+        BSECE = "BSECE", "BS Electronics Engineering"
+        BSGE = "BSGE", "BS Geodetic Engineering"
+        BSME = "BSME", "BS Mechanical Engineering"
+        # Technology
+        BSAUTO = "BSAUTO", "BS Autotronics"
+        BSEMT = "BSEMT", "BS Electro-Mechanical Technology"
+        BSELT = "BSELT", "BS Electronics Technology"
+        BSESM = "BSESM", "BS Energy Systems and Management"
+        BSMFG = "BSMFG", "BS Manufacturing Engineering Technology"
+        BTOM = "BTOM", "Bachelor of Technology, Operations, and Management"
+        # Education
+        BTLED = "BTLED", "Bachelor in Technology and Livelihood Education"
+        BTVTED = "BTVTED", "Bachelor in Technical-Vocational Teacher Education"
+        BSED = "BSED", "BS Secondary Education"
+        BEED = "BEED", "BS Elementary Education"
+        # Not yet confirmed on the official list
+        BSN = "BSN", "BS Nursing"
 
     username = None
     date_joined = None

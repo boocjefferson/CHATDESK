@@ -2,31 +2,55 @@ import { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
-  ImageBackground,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
-import { BrandTitle } from "../components/brand-title";
+import { AuthHeader } from "../components/auth-header";
 import { useAuth } from "../context/AuthContext";
-import { colors, darkTheme } from "../theme/colors";
+import { colors } from "../theme/colors";
 
 // No Registration mockup existed in ui-prototype/ - matches Login's structure
-// and the same USTP branding. Course list agreed with Jefferson.
+// and the same USTP branding. Course list confirmed by Jefferson against the
+// official USTP CDO program list - must stay in sync with the Course
+// TextChoices in backend/users/models.py, or registration will 400 on any
+// value the backend doesn't recognize.
 const COURSE_OPTIONS = [
+  // Information Technology / Computer Science
   { label: "BS Information Technology", value: "BSIT" },
   { label: "BS Computer Science", value: "BSCS" },
-  { label: "BS Nursing", value: "BSN" },
-  { label: "BS Business Administration", value: "BSBA" },
-  { label: "BS Secondary Education", value: "BSED" },
-  { label: "BS Accountancy", value: "BSA" },
+  { label: "BS Data Science", value: "BSDS" },
+  { label: "Bachelor in Technology Communication Management", value: "BTCM" },
+  // Engineering
+  { label: "BS Architecture", value: "BSARCH" },
   { label: "BS Civil Engineering", value: "BSCE" },
+  { label: "BS Computer Engineering", value: "BSCPE" },
   { label: "BS Electrical Engineering", value: "BSEE" },
+  { label: "BS Electronics Engineering", value: "BSECE" },
+  { label: "BS Geodetic Engineering", value: "BSGE" },
+  { label: "BS Mechanical Engineering", value: "BSME" },
+  // Technology
+  { label: "BS Autotronics", value: "BSAUTO" },
+  { label: "BS Electro-Mechanical Technology", value: "BSEMT" },
+  { label: "BS Electronics Technology", value: "BSELT" },
+  { label: "BS Energy Systems and Management", value: "BSESM" },
+  { label: "BS Manufacturing Engineering Technology", value: "BSMFG" },
+  { label: "Bachelor of Technology, Operations, and Management", value: "BTOM" },
+  // Education
+  { label: "Bachelor in Technology and Livelihood Education", value: "BTLED" },
+  { label: "Bachelor in Technical-Vocational Teacher Education", value: "BTVTED" },
+  { label: "BS Secondary Education", value: "BSED" },
+  { label: "BS Elementary Education", value: "BEED" },
+  // Not yet confirmed on the official list
+  { label: "BS Nursing", value: "BSN" },
 ];
 
 export default function RegisterScreen() {
@@ -35,6 +59,7 @@ export default function RegisterScreen() {
   const [schoolId, setSchoolId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [course, setCourse] = useState(COURSE_OPTIONS[0].value);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -66,62 +91,93 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ImageBackground
-      source={require("../assets/login.jpg")}
+    <KeyboardAvoidingView
       style={styles.screen}
-      resizeMode="cover"
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={styles.overlay} />
-      <Image source={require("../assets/1.png")} style={styles.logo} resizeMode="contain" />
-      <BrandTitle style={styles.brandTitle} />
-      <Text style={styles.subtitle}>Create your student account</Text>
+      <AuthHeader />
 
-      <View style={styles.card}>
+      <ScrollView
+        contentContainerStyle={styles.sheet}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.heading}>Sign up</Text>
+        <Text style={styles.subheading}>Create your student account</Text>
+
+        <Text style={styles.label}>First name</Text>
         <TextInput
           style={styles.input}
-          placeholder="First name"
-          placeholderTextColor={darkTheme.textMuted}
+          placeholder="Juan"
+          placeholderTextColor={colors.textMuted}
           value={firstName}
           onChangeText={setFirstName}
         />
+
+        <Text style={styles.label}>Last name</Text>
         <TextInput
           style={styles.input}
-          placeholder="Last name"
-          placeholderTextColor={darkTheme.textMuted}
+          placeholder="Dela Cruz"
+          placeholderTextColor={colors.textMuted}
           value={lastName}
           onChangeText={setLastName}
         />
+
+        <Text style={styles.label}>School ID</Text>
         <TextInput
           style={styles.input}
-          placeholder="School ID"
-          placeholderTextColor={darkTheme.textMuted}
+          placeholder="2026-00001"
+          placeholderTextColor={colors.textMuted}
           value={schoolId}
           onChangeText={setSchoolId}
         />
+
+        <Text style={styles.label}>Email</Text>
         <TextInput
           style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={darkTheme.textMuted}
+          placeholder="you@ustp.edu.ph"
+          placeholderTextColor={colors.textMuted}
           autoCapitalize="none"
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={darkTheme.textMuted}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
 
+        <Text style={styles.label}>Password</Text>
+        <View style={styles.passwordField}>
+          <TextInput
+            style={styles.passwordInput}
+            placeholder="••••••••"
+            placeholderTextColor={colors.textMuted}
+            secureTextEntry={!isPasswordVisible}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <Pressable
+            onPress={() => setIsPasswordVisible((prev) => !prev)}
+            hitSlop={10}
+            style={styles.eyeButton}
+          >
+            <MaterialIcons
+              name={isPasswordVisible ? "visibility-off" : "visibility"}
+              size={20}
+              color={colors.textMuted}
+            />
+          </Pressable>
+        </View>
+
+        <Text style={styles.label}>Course</Text>
         <Pressable style={styles.pickerWrapper} onPress={() => setIsCoursePickerOpen(true)}>
           <Text style={styles.pickerValueText}>{selectedCourseLabel}</Text>
-          <Text style={styles.pickerChevron}>▾</Text>
+          <MaterialIcons name="expand-more" size={20} color={colors.textMuted} />
         </Pressable>
 
-        <Modal visible={isCoursePickerOpen} transparent animationType="fade" onRequestClose={() => setIsCoursePickerOpen(false)}>
+        <Modal
+          visible={isCoursePickerOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsCoursePickerOpen(false)}
+        >
           <Pressable style={styles.modalBackdrop} onPress={() => setIsCoursePickerOpen(false)}>
             <View style={styles.modalSheet}>
               <FlatList
@@ -135,7 +191,12 @@ export default function RegisterScreen() {
                       setIsCoursePickerOpen(false);
                     }}
                   >
-                    <Text style={[styles.modalOptionText, item.value === course && styles.modalOptionTextSelected]}>
+                    <Text
+                      style={[
+                        styles.modalOptionText,
+                        item.value === course && styles.modalOptionTextSelected,
+                      ]}
+                    >
                       {item.label}
                     </Text>
                   </Pressable>
@@ -157,82 +218,81 @@ export default function RegisterScreen() {
 
         <Pressable onPress={() => router.push("/login")}>
           <Text style={styles.signupText}>
-            Already have an account? Log in <Text style={styles.signupLink}>here</Text>
+            Already have an account? <Text style={styles.signupLink}>Log in here</Text>
           </Text>
         </Pressable>
-      </View>
-    </ImageBackground>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
+  screen: { flex: 1, backgroundColor: colors.white },
+  sheet: {
+    flexGrow: 1,
+    paddingHorizontal: 28,
+    paddingTop: 28,
+    paddingBottom: 32,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 16, 46, 0.45)",
+  heading: {
+    fontSize: 24,
+    fontFamily: "PlusJakartaSans_700Bold",
+    color: colors.textPrimary,
+    marginBottom: 4,
   },
-  logo: { width: 90, height: 90, marginBottom: 4, borderRadius: 18 },
-  brandTitle: {
-    fontSize: 26,
-    textShadowColor: "rgba(0, 0, 0, 0.35)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  subtitle: {
+  subheading: {
+    fontSize: 14,
     fontFamily: "Montserrat_400Regular",
-    color: colors.white,
-    marginBottom: 16,
-    textShadowColor: "rgba(0, 0, 0, 0.35)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
+    color: colors.textSecondary,
+    marginBottom: 24,
   },
-  card: {
-    width: "100%",
-    maxWidth: 360,
-    backgroundColor: darkTheme.surface,
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 6,
+  label: {
+    fontSize: 13,
+    fontFamily: "Montserrat_400Regular",
+    color: colors.textSecondary,
+    marginBottom: 6,
   },
   input: {
-    backgroundColor: "#0E1224",
-    borderWidth: 1,
-    borderColor: darkTheme.textSecondary,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 12,
-    fontSize: 16,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    marginBottom: 16,
+    fontSize: 15,
     fontFamily: "Montserrat_400Regular",
-    color: darkTheme.textPrimary,
+    color: colors.textPrimary,
   },
+  passwordField: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 13,
+    fontSize: 15,
+    fontFamily: "Montserrat_400Regular",
+    color: colors.textPrimary,
+  },
+  eyeButton: { paddingLeft: 8, paddingVertical: 8 },
   pickerWrapper: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#0E1224",
-    borderWidth: 1,
-    borderColor: darkTheme.textSecondary,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 12,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    marginBottom: 20,
   },
   pickerValueText: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: "Montserrat_400Regular",
-    color: darkTheme.textPrimary,
+    color: colors.textPrimary,
   },
-  pickerChevron: { color: darkTheme.textMuted, fontSize: 16 },
   modalBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -259,20 +319,24 @@ const styles = StyleSheet.create({
     color: colors.navy,
   },
   button: {
-    backgroundColor: colors.gold,
-    borderRadius: 8,
-    paddingVertical: 13,
+    backgroundColor: colors.navy,
+    borderRadius: 14,
+    paddingVertical: 15,
     alignItems: "center",
-    marginTop: 4,
+    marginBottom: 20,
   },
   buttonText: { fontSize: 16, fontFamily: "Montserrat_700Bold", color: colors.white },
   signupText: {
     textAlign: "center",
-    marginTop: 14,
     fontSize: 13,
     fontFamily: "Montserrat_400Regular",
-    color: colors.white,
+    color: colors.textSecondary,
   },
-  signupLink: { fontFamily: "Montserrat_700Bold", color: colors.white },
-  errorText: { color: colors.errorRed, fontSize: 13, marginBottom: 8, textAlign: "center" },
+  signupLink: { fontFamily: "Montserrat_700Bold", color: colors.navy },
+  errorText: {
+    color: colors.errorRed,
+    fontSize: 13,
+    marginBottom: 12,
+    textAlign: "center",
+  },
 });

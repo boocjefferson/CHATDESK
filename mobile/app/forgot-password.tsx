@@ -1,18 +1,20 @@
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Image,
-  ImageBackground,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
-import { BrandTitle } from "../components/brand-title";
+import { AuthHeader } from "../components/auth-header";
 import axiosClient from "../lib/axiosClient";
-import { colors, darkTheme } from "../theme/colors";
+import { colors } from "../theme/colors";
 
 // No mockup for this screen in ui-prototype/ - matches Login/Register's
 // structure and USTP branding. Two steps: request a code by email, then
@@ -23,6 +25,8 @@ export default function ForgotPasswordScreen() {
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false);
+  const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [infoMessage, setInfoMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,25 +77,29 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <ImageBackground
-      source={require("../assets/login.jpg")}
+    <KeyboardAvoidingView
       style={styles.screen}
-      resizeMode="cover"
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <View style={styles.overlay} />
-      <Image source={require("../assets/1.png")} style={styles.logo} resizeMode="contain" />
-      <BrandTitle style={styles.brandTitle} />
-      <Text style={styles.subtitle}>
-        {step === "request" ? "Reset your password" : "Enter the code we emailed you"}
-      </Text>
+      <AuthHeader />
 
-      <View style={styles.card}>
+      <ScrollView
+        contentContainerStyle={styles.sheet}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.heading}>{step === "request" ? "Reset password" : "Enter code"}</Text>
+        <Text style={styles.subheading}>
+          {step === "request" ? "We'll send a code to your email" : "Enter the code we sent you"}
+        </Text>
+
         {step === "request" ? (
           <>
+            <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
-              placeholder="Email"
-              placeholderTextColor={darkTheme.textMuted}
+              placeholder="you@ustp.edu.ph"
+              placeholderTextColor={colors.textMuted}
               autoCapitalize="none"
               keyboardType="email-address"
               value={email}
@@ -112,31 +120,62 @@ export default function ForgotPasswordScreen() {
           <>
             {infoMessage ? <Text style={styles.infoText}>{infoMessage}</Text> : null}
 
+            <Text style={styles.label}>6-digit code</Text>
             <TextInput
               style={styles.input}
-              placeholder="6-digit code"
-              placeholderTextColor={darkTheme.textMuted}
+              placeholder="123456"
+              placeholderTextColor={colors.textMuted}
               keyboardType="number-pad"
               maxLength={6}
               value={code}
               onChangeText={setCode}
             />
-            <TextInput
-              style={styles.input}
-              placeholder="New password"
-              placeholderTextColor={darkTheme.textMuted}
-              secureTextEntry
-              value={newPassword}
-              onChangeText={setNewPassword}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm new password"
-              placeholderTextColor={darkTheme.textMuted}
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
+
+            <Text style={styles.label}>New password</Text>
+            <View style={styles.passwordField}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="••••••••"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry={!isNewPasswordVisible}
+                value={newPassword}
+                onChangeText={setNewPassword}
+              />
+              <Pressable
+                onPress={() => setIsNewPasswordVisible((prev) => !prev)}
+                hitSlop={10}
+                style={styles.eyeButton}
+              >
+                <MaterialIcons
+                  name={isNewPasswordVisible ? "visibility-off" : "visibility"}
+                  size={20}
+                  color={colors.textMuted}
+                />
+              </Pressable>
+            </View>
+
+            <Text style={styles.label}>Confirm new password</Text>
+            <View style={styles.passwordField}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="••••••••"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry={!isConfirmPasswordVisible}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+              />
+              <Pressable
+                onPress={() => setIsConfirmPasswordVisible((prev) => !prev)}
+                hitSlop={10}
+                style={styles.eyeButton}
+              >
+                <MaterialIcons
+                  name={isConfirmPasswordVisible ? "visibility-off" : "visibility"}
+                  size={20}
+                  color={colors.textMuted}
+                />
+              </Pressable>
+            </View>
 
             {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
@@ -165,84 +204,89 @@ export default function ForgotPasswordScreen() {
             Back to <Text style={styles.signupLink}>Log in</Text>
           </Text>
         </Pressable>
-      </View>
-    </ImageBackground>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 24,
+  screen: { flex: 1, backgroundColor: colors.white },
+  sheet: {
+    flexGrow: 1,
+    paddingHorizontal: 28,
+    paddingTop: 28,
+    paddingBottom: 32,
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 16, 46, 0.45)",
+  heading: {
+    fontSize: 24,
+    fontFamily: "PlusJakartaSans_700Bold",
+    color: colors.textPrimary,
+    marginBottom: 4,
   },
-  logo: { width: 90, height: 90, marginBottom: 4, borderRadius: 18 },
-  brandTitle: {
-    fontSize: 26,
-    textShadowColor: "rgba(0, 0, 0, 0.35)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  subtitle: {
+  subheading: {
+    fontSize: 14,
     fontFamily: "Montserrat_400Regular",
-    color: colors.white,
-    marginBottom: 16,
-    marginTop: 4,
-    textAlign: "center",
-    textShadowColor: "rgba(0, 0, 0, 0.35)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
+    color: colors.textSecondary,
+    marginBottom: 24,
   },
-  card: {
-    width: "100%",
-    maxWidth: 360,
-    backgroundColor: darkTheme.surface,
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 6,
+  label: {
+    fontSize: 13,
+    fontFamily: "Montserrat_400Regular",
+    color: colors.textSecondary,
+    marginBottom: 6,
   },
   input: {
-    backgroundColor: "#0E1224",
-    borderWidth: 1,
-    borderColor: darkTheme.textSecondary,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 12,
-    fontSize: 16,
-    fontFamily: "Montserrat_400Regular",
-    color: darkTheme.textPrimary,
-  },
-  button: {
-    backgroundColor: colors.gold,
-    borderRadius: 8,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    paddingHorizontal: 16,
     paddingVertical: 13,
+    marginBottom: 16,
+    fontSize: 15,
+    fontFamily: "Montserrat_400Regular",
+    color: colors.textPrimary,
+  },
+  passwordField: {
+    flexDirection: "row",
     alignItems: "center",
-    marginTop: 4,
+    backgroundColor: "#F3F4F6",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 13,
+    fontSize: 15,
+    fontFamily: "Montserrat_400Regular",
+    color: colors.textPrimary,
+  },
+  eyeButton: { paddingLeft: 8, paddingVertical: 8 },
+  button: {
+    backgroundColor: colors.navy,
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginBottom: 20,
   },
   buttonText: { fontSize: 16, fontFamily: "Montserrat_700Bold", color: colors.white },
   signupText: {
     textAlign: "center",
-    marginTop: 14,
     fontSize: 13,
     fontFamily: "Montserrat_400Regular",
-    color: colors.white,
+    color: colors.textSecondary,
+    marginTop: 4,
   },
-  signupLink: { fontFamily: "Montserrat_700Bold", color: colors.white },
-  errorText: { color: colors.errorRed, fontSize: 13, marginBottom: 8, textAlign: "center" },
-  infoText: {
-    color: darkTheme.textPrimary,
+  signupLink: { fontFamily: "Montserrat_700Bold", color: colors.navy },
+  errorText: {
+    color: colors.errorRed,
     fontSize: 13,
     marginBottom: 12,
+    textAlign: "center",
+  },
+  infoText: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    marginBottom: 16,
     textAlign: "center",
     fontFamily: "Montserrat_400Regular",
   },
