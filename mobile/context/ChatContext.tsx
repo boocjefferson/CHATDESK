@@ -99,8 +99,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const resumeSession = (sessionId: string) => {
     const session = history.find((item) => item.id === sessionId);
     if (!session) return;
+
+    let nextHistory = history.filter((item) => item.id !== sessionId);
+    if (messages.length > 0) {
+      const currentSession: ChatSession = {
+        id: Date.now().toString(),
+        title: makeTitle(messages),
+        messages,
+        updatedAt: new Date().toISOString(),
+      };
+      nextHistory = [currentSession, ...nextHistory];
+    }
+
+    persistHistory(nextHistory);
     setMessages(session.messages);
-    persistHistory(history.filter((item) => item.id !== sessionId));
   };
 
   return (

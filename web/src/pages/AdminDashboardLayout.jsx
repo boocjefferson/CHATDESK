@@ -6,6 +6,7 @@ const PAGE_META = {
   "/tickets": { title: "Tickets", subtitle: "Review and resolve escalated student inquiries" },
   "/faqs": { title: "FAQs", subtitle: "Maintain the chatbot's knowledge base" },
   "/analytics": { title: "Analytics Overview", subtitle: "Inquiry trends and ticket performance" },
+  "/logs": { title: "Inquiry Logs", subtitle: "Raw chatbot conversation history" },
   "/announcements": { title: "Announcements", subtitle: "Broadcast updates to all students" },
   "/settings": { title: "Settings", subtitle: "Manage your admin account" },
 };

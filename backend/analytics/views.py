@@ -30,6 +30,10 @@ class AnalyticsOverviewView(APIView):
         ]
 
         tickets = Ticket.objects.all()
+        if date_from:
+            tickets = tickets.filter(created_at__date__gte=date_from)
+        if date_to:
+            tickets = tickets.filter(created_at__date__lte=date_to)
         tickets_by_status = {
             value: tickets.filter(status=value).count()
             for value, _ in Ticket.Status.choices

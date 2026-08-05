@@ -17,10 +17,18 @@ axiosClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) 
 });
 
 let isRefreshing = false;
-let pendingRequests: Array<(newAccessToken: string) => void> = [];
+let pendingRequests: Array<{
+  resolve: (newAccessToken: string) => void;
+  reject: (error: unknown) => void;
+}> = [];
 
 const resolvePendingRequests = (newAccessToken: string) => {
-  pendingRequests.forEach((callback) => callback(newAccessToken));
+  pendingRequests.forEach(({ resolve }) => resolve(newAccessToken));
+  pendingRequests = [];
+};
+
+const rejectPendingRequests = (error: unknown) => {
+  pendingRequests.forEach(({ reject }) => reject(error));
   pendingRequests = [];
 };
 
@@ -41,10 +49,13 @@ axiosClient.interceptors.response.use(
       originalRequest._retry = true;
 
       if (isRefreshing) {
-        return new Promise((resolve) => {
-          pendingRequests.push((newAccessToken) => {
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-            resolve(axiosClient(originalRequest));
+        return new Promise((resolve, reject) => {
+          pendingRequests.push({
+            resolve: (newAccessToken) => {
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+              resolve(axiosClient(originalRequest));
+            },
+            reject,
           });
         });
       }
@@ -60,6 +71,7 @@ axiosClient.interceptors.response.use(
         return axiosClient(originalRequest);
       } catch (refreshError) {
         await clearTokens();
+        rejectPendingRequests(refreshError);
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
