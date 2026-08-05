@@ -35,7 +35,9 @@ export default function AdminLogin() {
       <div className="flex w-full flex-col justify-center px-8 py-12 sm:px-16 lg:w-[42%] lg:px-20">
         <div className="mx-auto w-full max-w-md">
           <div className="mb-10 flex items-center gap-3">
-            <img src={ustpLogo} alt="ChatDesk logo" className="h-11 w-10 shrink-0 rounded-lg object-contain" />
+            <div className="flex h-11 w-10 shrink-0 items-center justify-center rounded-lg bg-navy p-1.5">
+              <img src={ustpLogo} alt="ChatDesk logo" className="h-full w-full object-contain" />
+            </div>
             <span className="text-xl font-bold text-navy">
               Chat<span className="text-gold">Desk</span>
             </span>
