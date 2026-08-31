@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import ustpLogo from "../assets/ustp-logo.png";
+import ustpLogo from "../assets/1.png";
 
 const navItems = [
   {
@@ -57,6 +57,32 @@ const navItems = [
     ),
   },
   {
+    label: "Inquiry Logs",
+    to: "/logs",
+    icon: (
+      <path
+        d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 12h6M9 16h6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
+    label: "Announcements",
+    to: "/announcements",
+    icon: (
+      <path
+        d="M4 6h11l4-3v18l-4-3H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1ZM8 15v3a2 2 0 0 0 2 2h1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
     label: "Settings",
     to: "/settings",
     icon: (
@@ -83,7 +109,7 @@ export default function Sidebar() {
     <aside className="flex h-screen w-64 shrink-0 flex-col justify-between bg-navy px-5 py-6 text-white">
       <div>
         <div className="mb-8 flex items-center gap-2.5 px-1">
-          <img src={ustpLogo} alt="USTP logo" className="h-9 w-8 shrink-0 object-contain" />
+          <img src={ustpLogo} alt="ChatDesk logo" className="h-9 w-8 shrink-0 rounded-md object-contain" />
           <span className="font-plus-jakarta text-lg font-bold">
             Chat<span className="text-gold">Desk</span>
           </span>

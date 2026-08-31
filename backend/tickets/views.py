@@ -75,8 +75,8 @@ class TicketDetailView(generics.RetrieveUpdateAPIView):
     def perform_update(self, serializer):
         ticket = self.get_object()
         extra = {}
-        if ticket.resolved_by_id is None:
-            extra["resolved_by"] = self.request.user
         if serializer.validated_data.get("status") == Ticket.Status.RESOLVED:
+            if ticket.resolved_by_id is None:
+                extra["resolved_by"] = self.request.user
             extra["resolved_at"] = timezone.now()
         serializer.save(**extra)

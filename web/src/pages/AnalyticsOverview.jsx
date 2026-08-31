@@ -11,21 +11,82 @@ const STATUS_META = {
 export default function AnalyticsOverview() {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  const loadData = () => {
+    setIsLoading(true);
+    setError(null);
+    const params = {};
+    if (dateFrom) params.date_from = dateFrom;
+    if (dateTo) params.date_to = dateTo;
+
+    getAnalyticsOverview(params)
+      .then(setData)
+      .catch(() => setError("Could not load analytics."))
+      .finally(() => setIsLoading(false));
+  };
 
   useEffect(() => {
-    getAnalyticsOverview()
-      .then(setData)
-      .finally(() => setIsLoading(false));
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleApplyFilter = (e) => {
+    e.preventDefault();
+    loadData();
+  };
+
+  const handleClearFilter = () => {
+    setDateFrom("");
+    setDateTo("");
+    setTimeout(loadData, 0);
+  };
+
   if (isLoading) return <LoadingState label="Loading analytics..." />;
-  if (!data) return <ErrorState message="Could not load analytics." />;
+  if (error) return <ErrorState message={error} />;
+  if (!data) return null;
 
   const totalTickets = Object.values(data.tickets_by_status).reduce((sum, count) => sum + count, 0);
   const resolvedTickets = data.tickets_by_status.resolved ?? 0;
 
   return (
     <section>
+      <form onSubmit={handleApplyFilter} className="mb-6 flex flex-wrap items-end gap-3">
+        <div>
+          <label className="mb-1 block text-sm text-gray-500">From</label>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm text-gray-500">To</label>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
+          />
+        </div>
+        <button
+          type="submit"
+          className="rounded-full bg-navy px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:brightness-110"
+        >
+          Apply
+        </button>
+        <button
+          type="button"
+          onClick={handleClearFilter}
+          className="rounded-full border border-gray-200 px-4 py-1.5 text-sm text-navy transition-colors hover:border-gold"
+        >
+          Clear
+        </button>
+      </form>
+
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
           label="Total Inquiries"

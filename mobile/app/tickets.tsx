@@ -66,7 +66,7 @@ export default function TicketsScreen() {
           </View>
           <ScrollView>
             {tickets.map((ticket) => {
-              const isResolved = ticket.status !== "pending";
+              const isResolved = ticket.status === "resolved";
               return (
                 <View key={ticket.ticket_id} style={styles.row}>
                   <Text style={[styles.rowLabel, styles.labelColumn]}>Ticket {ticket.ticket_id}</Text>

@@ -15,7 +15,7 @@ class Faq(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
         related_name="created_faqs", db_column="user_id",
     )
-    intent_keyword = models.CharField(max_length=100)
+    intent_keyword = models.CharField(max_length=100, unique=True)
     question_text = models.TextField()
     answer_content = models.TextField()
     category = models.CharField(max_length=20, choices=Category.choices)

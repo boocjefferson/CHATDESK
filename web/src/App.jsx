@@ -7,6 +7,8 @@ import FaqManagement from "./pages/FaqManagement.jsx";
 import AdminSettings from "./pages/AdminSettings.jsx";
 import AnalyticsOverview from "./pages/AnalyticsOverview.jsx";
 import UserManagement from "./pages/UserManagement.jsx";
+import InquiryLogs from "./pages/InquiryLogs.jsx";
+import AnnouncementManagement from "./pages/AnnouncementManagement.jsx";
 
 export default function App() {
   return (
@@ -26,6 +28,8 @@ export default function App() {
         <Route path="tickets" element={<TicketManagement />} />
         <Route path="faqs" element={<FaqManagement />} />
         <Route path="analytics" element={<AnalyticsOverview />} />
+        <Route path="logs" element={<InquiryLogs />} />
+        <Route path="announcements" element={<AnnouncementManagement />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 
