@@ -22,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "course",
             "school_id",
+            "profile_picture",
             "is_active",
             "last_login",
             "created_at",
@@ -69,7 +70,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
     def to_representation(self, instance):
-        return {"user": UserSerializer(instance).data, **_tokens_for_user(instance)}
+        return {
+            "user": UserSerializer(instance, context=self.context).data,
+            **_tokens_for_user(instance),
+        }
 
 
 class LoginSerializer(serializers.Serializer):
@@ -102,7 +106,10 @@ class LoginSerializer(serializers.Serializer):
 
     def to_representation(self, instance):
         user = instance["user"]
-        return {"user": UserSerializer(user).data, **_tokens_for_user(user)}
+        return {
+            "user": UserSerializer(user, context=self.context).data,
+            **_tokens_for_user(user),
+        }
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
@@ -131,14 +138,14 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 class UserSelfUpdateSerializer(serializers.ModelSerializer):
     """PATCH /api/v1/auth/me/ - any authenticated user editing their own
-    profile. Deliberately narrow: only first_name/last_name are editable
-    here. role, email, is_active, and school_id all stay untouchable via
-    this endpoint - see UserAdminUpdateSerializer for the admin-only,
-    wider version of this same shape."""
+    profile. Deliberately narrow: first_name/last_name/profile_picture are
+    editable here. role, email, is_active, and school_id all stay
+    untouchable via this endpoint - see UserAdminUpdateSerializer for the
+    admin-only, wider version of this same shape."""
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name"]
+        fields = ["first_name", "last_name", "profile_picture"]
 
 
 class UserAdminUpdateSerializer(serializers.ModelSerializer):
