@@ -150,8 +150,8 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
 
   return (
     <Modal transparent visible={isMounted} animationType="none" onRequestClose={onClose} statusBarTranslucent>
-      <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose}>
-        <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFillObject} />
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+        <BlurView intensity={35} tint="dark" style={StyleSheet.absoluteFill} />
       </Pressable>
 
       <Animated.View style={[styles.panel, { width: panelWidth }, panelStyle]}>

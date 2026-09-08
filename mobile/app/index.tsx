@@ -73,7 +73,7 @@ export default function StudentChatScreen() {
       <LinearGradient
         colors={[colors.surface, colors.surface, colors.accent]}
         locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
       <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
         <View style={styles.header}>
