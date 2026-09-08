@@ -8,6 +8,7 @@ const PAGE_META = {
   "/analytics": { title: "Analytics Overview", subtitle: "Inquiry trends and ticket performance" },
   "/logs": { title: "Inquiry Logs", subtitle: "Raw chatbot conversation history" },
   "/announcements": { title: "Announcements", subtitle: "Broadcast updates to all students" },
+  "/phases": { title: "Phases", subtitle: "Manage USTP calendar phases and student guidance" },
   "/settings": { title: "Settings", subtitle: "Manage your admin account" },
 };
 

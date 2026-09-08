@@ -22,6 +22,7 @@ from .serializers import (
     RegisterSerializer,
     UserAdminUpdateSerializer,
     UserCreateSerializer,
+    UserSelfUpdateSerializer,
     UserSerializer,
 )
 
@@ -86,14 +87,20 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_205_RESET_CONTENT)
 
 
-class MeView(generics.RetrieveAPIView):
-    """GET /api/v1/auth/me/ - auth required. Returns the current user's profile."""
+class MeView(generics.RetrieveUpdateAPIView):
+    """
+    GET   /api/v1/auth/me/ - auth required. Returns the current user's profile.
+    PATCH /api/v1/auth/me/ - auth required. Edit your own first_name/last_name
+          only - see UserSelfUpdateSerializer for why it's this narrow.
+    """
 
-    serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
+    def get_serializer_class(self):
+        return UserSelfUpdateSerializer if self.request.method == "PATCH" else UserSerializer
 
 
 class PasswordResetRequestView(APIView):

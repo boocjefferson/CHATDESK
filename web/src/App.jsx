@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import AdminLogin from "./pages/AdminLogin.jsx";
+import AdminResetPassword from "./pages/AdminResetPassword.jsx";
 import AdminDashboardLayout from "./pages/AdminDashboardLayout.jsx";
 import TicketManagement from "./pages/TicketManagement.jsx";
 import FaqManagement from "./pages/FaqManagement.jsx";
@@ -9,11 +10,13 @@ import AnalyticsOverview from "./pages/AnalyticsOverview.jsx";
 import UserManagement from "./pages/UserManagement.jsx";
 import InquiryLogs from "./pages/InquiryLogs.jsx";
 import AnnouncementManagement from "./pages/AnnouncementManagement.jsx";
+import PhaseManagement from "./pages/PhaseManagement.jsx";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<AdminLogin />} />
+      <Route path="/reset-password" element={<AdminResetPassword />} />
 
       <Route
         path="/"
@@ -30,6 +33,7 @@ export default function App() {
         <Route path="analytics" element={<AnalyticsOverview />} />
         <Route path="logs" element={<InquiryLogs />} />
         <Route path="announcements" element={<AnnouncementManagement />} />
+        <Route path="phases" element={<PhaseManagement />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 

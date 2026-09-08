@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import ustpLogo from "../assets/1.png";
 
@@ -62,7 +62,12 @@ export default function AdminLogin() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-navy">Password</label>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="block text-sm font-medium text-navy">Password</label>
+                <Link to="/reset-password" className="text-sm font-medium text-gold hover:text-navy">
+                  Forgot password?
+                </Link>
+              </div>
               <input
                 type="password"
                 placeholder="••••••••"
@@ -87,10 +92,11 @@ export default function AdminLogin() {
             Note: admin_login.png (the original approved prototype) includes a
             "Sign up here" link, but claude/API_CONTRACT.md states admin accounts
             are created manually via `manage.py createsuperuser`, not
-            self-registered - omitted on purpose. Same reasoning applies to
-            "Login with Google" / "Forgot password" seen in later design
-            references: neither has a real backend endpoint, so they're left out
-            rather than built as non-functional UI.
+            self-registered - omitted on purpose. "Login with Google" seen in
+            later design references is left out too, since there's no OAuth
+            backend behind it. Forgot Password *is* wired up (see above) - the
+            password-reset endpoints already existed for mobile and aren't
+            role-restricted.
           */}
         </div>
       </div>

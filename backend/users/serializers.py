@@ -129,6 +129,18 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         return value
 
 
+class UserSelfUpdateSerializer(serializers.ModelSerializer):
+    """PATCH /api/v1/auth/me/ - any authenticated user editing their own
+    profile. Deliberately narrow: only first_name/last_name are editable
+    here. role, email, is_active, and school_id all stay untouchable via
+    this endpoint - see UserAdminUpdateSerializer for the admin-only,
+    wider version of this same shape."""
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name"]
+
+
 class UserAdminUpdateSerializer(serializers.ModelSerializer):
     """PATCH /api/v1/users/{id}/ - admin only. Role/status/profile edits;
     email and password are out of scope here (see users/views.py for the
