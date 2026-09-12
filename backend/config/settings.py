@@ -95,6 +95,12 @@ USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Profile picture uploads (users.User.profile_picture). Served directly by
+# Django in dev via config/urls.py's static() helper - a real deployment
+# would front this with nginx/S3 instead.
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 # Route-protection: every endpoint requires a valid JWT unless a view explicitly
 # sets permission_classes = [AllowAny] (register/login only).
 REST_FRAMEWORK = {

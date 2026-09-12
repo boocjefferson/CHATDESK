@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Image,
   Linking,
   Modal,
   Pressable,
@@ -22,6 +23,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BrandTitle } from "./brand-title";
+import { useAuth } from "../context/AuthContext";
 import { useChat } from "../context/ChatContext";
 import { useTheme } from "../context/ThemeContext";
 import { colors as brandColors, type ThemePalette } from "../theme/colors";
@@ -49,6 +51,7 @@ type NavMenuProps = {
 
 export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProps) {
   const { colors, isDark } = useTheme();
+  const { currentUser } = useAuth();
   const styles = createStyles(colors);
   const { history, resumeSession, startNewChat } = useChat();
   const { width } = useWindowDimensions();
@@ -169,7 +172,11 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
                 router.push("/profile");
               }}
             >
-              <Text style={styles.avatarText}>{userInitial}</Text>
+              {currentUser?.profile_picture ? (
+                <Image source={{ uri: currentUser.profile_picture }} style={styles.avatarImage} />
+              ) : (
+                <Text style={styles.avatarText}>{userInitial}</Text>
+              )}
             </Pressable>
           </View>
 
@@ -261,7 +268,9 @@ const createStyles = (colors: ThemePalette) =>
       borderColor: colors.accentText,
       alignItems: "center",
       justifyContent: "center",
+      overflow: "hidden",
     },
+    avatarImage: { width: 26, height: 26 },
     avatarText: { fontFamily: "Montserrat_700Bold", color: colors.accentText, fontSize: 11 },
     menuList: { marginTop: 4 },
     menuRow: {

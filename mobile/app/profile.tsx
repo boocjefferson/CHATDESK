@@ -1,7 +1,8 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Image, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import axiosClient from "../lib/axiosClient";
@@ -19,12 +20,13 @@ const COURSE_LABELS: Record<string, string> = {
 };
 
 export default function ProfileScreen() {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, updateCurrentUser } = useAuth();
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const [nickname, setNickname] = useState(currentUser?.first_name ?? "");
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   const userInitial = currentUser?.first_name?.[0]?.toUpperCase() ?? "?";
   const fullName = `${currentUser?.first_name ?? ""} ${currentUser?.last_name ?? ""}`.trim();
@@ -33,11 +35,50 @@ export default function ProfileScreen() {
   const handleUpdate = async () => {
     setIsUpdating(true);
     try {
-      await axiosClient.patch("/auth/me/", { first_name: nickname });
+      const { data } = await axiosClient.patch("/auth/me/", { first_name: nickname });
+      updateCurrentUser(data);
     } catch {
-      Alert.alert("Unavailable", "Profile updates aren't available yet - please check back soon.");
+      Alert.alert("Unable to update", "Please try again.");
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handlePickPhoto = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission needed",
+        "Allow photo library access in your device settings to change your profile picture."
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+
+    const asset = result.assets[0];
+    setIsUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append("profile_picture", {
+        uri: asset.uri,
+        name: asset.fileName ?? "profile.jpg",
+        type: asset.mimeType ?? "image/jpeg",
+      } as unknown as Blob);
+      const { data } = await axiosClient.patch("/auth/me/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      updateCurrentUser(data);
+    } catch {
+      Alert.alert("Unable to update photo", "Please try again.");
+    } finally {
+      setIsUploadingPhoto(false);
     }
   };
 
@@ -61,9 +102,18 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.identityRow}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{userInitial}</Text>
-        </View>
+        <Pressable style={styles.avatar} onPress={handlePickPhoto} disabled={isUploadingPhoto}>
+          {isUploadingPhoto ? (
+            <ActivityIndicator color={colors.accentText} />
+          ) : currentUser?.profile_picture ? (
+            <Image source={{ uri: currentUser.profile_picture }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.avatarText}>{userInitial}</Text>
+          )}
+          <View style={styles.avatarEditBadge}>
+            <MaterialIcons name="edit" size={12} color={colors.white} />
+          </View>
+        </Pressable>
         <View>
           <Text style={styles.name}>{fullName || "Student"}</Text>
           <Text style={styles.detail}>{courseLabel}</Text>
@@ -110,8 +160,23 @@ const createStyles = (colors: ThemePalette) =>
       borderColor: colors.accentText,
       alignItems: "center",
       justifyContent: "center",
+      overflow: "hidden",
     },
+    avatarImage: { width: 56, height: 56 },
     avatarText: { fontFamily: "Montserrat_700Bold", color: colors.accentText, fontSize: 20 },
+    avatarEditBadge: {
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      width: 18,
+      height: 18,
+      borderRadius: 9,
+      backgroundColor: colors.gold,
+      alignItems: "center",
+      justifyContent: "center",
+      borderWidth: 1.5,
+      borderColor: colors.surface,
+    },
     name: { fontFamily: "Montserrat_700Bold", fontSize: 16, color: colors.textPrimary },
     detail: { fontFamily: "Montserrat_400Regular", fontSize: 13, color: colors.textSecondary },
     sectionLabel: {
