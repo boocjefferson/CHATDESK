@@ -18,7 +18,7 @@ def rename_superadmin_role_to_admin(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0005_alter_user_course'),
+        ('users', '0006_user_profile_picture'),
     ]
 
     operations = [

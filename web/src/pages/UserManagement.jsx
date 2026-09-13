@@ -184,13 +184,21 @@ export default function UserManagement() {
                   >
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                            isAdmin ? "bg-gold/15 text-gold" : "bg-navy/10 text-navy"
-                          }`}
-                        >
-                          {initialsFor(user.first_name, user.last_name)}
-                        </div>
+                        {user.profile_picture ? (
+                          <img
+                            src={user.profile_picture}
+                            alt=""
+                            className="h-9 w-9 shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                              isAdmin ? "bg-gold/15 text-gold" : "bg-navy/10 text-navy"
+                            }`}
+                          >
+                            {initialsFor(user.first_name, user.last_name)}
+                          </div>
+                        )}
                         <div>
                           <p className="font-medium leading-tight">
                             {user.first_name} {user.last_name}

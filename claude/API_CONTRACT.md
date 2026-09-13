@@ -75,6 +75,17 @@ Request: { "refresh": "jwt_refresh_token_string" } → Response 205.
 ### GET /api/v1/auth/me/
 Auth required. Returns the current authenticated user's profile.
 
+### PATCH /api/v1/auth/me/
+Auth required. Lets a student or admin edit their own first_name/last_name/
+profile_picture (role, email, is_active, and school_id stay untouchable via
+this endpoint). Send multipart/form-data (not JSON) when including
+profile_picture. Response is just the fields you can edit, not the full
+User Profile shape - re-fetch GET /auth/me/ if you need the rest.
+
+Request (multipart/form-data):
+first_name=Jefferson&last_name=Booc&profile_picture=<file>
+Response 200: { "first_name": "Jefferson", "last_name": "Booc", "profile_picture": "http://<host>/media/profile_pictures/xyz.jpg" }
+
 ### POST /api/v1/auth/password-reset/request/
 Public. Mobile "Forgot Password" step 1. Emails a 6-digit code (10 min expiry)
 to the account if one exists and is active. Always responds the same way
@@ -115,6 +126,7 @@ Response 400 (wrong/expired/already-used code, or unknown email):
   "role": "student",
   "course": "BSIT",
   "school_id": "2021-00123",
+  "profile_picture": "http://<host>/media/profile_pictures/xyz.jpg",
   "is_active": true,
   "last_login": "2026-07-20T09:12:00Z",
   "created_at": "2026-06-15T08:00:00Z"
@@ -124,7 +136,9 @@ Response 400 (wrong/expired/already-used code, or unknown email):
 # flagged for the team to fold into the next ERD revision). is_active and
 # last_login are Django's built-in AbstractUser fields, now surfaced for the
 # admin User Management screen below - last_login is null until the user's
-# first login after this field started being stamped.
+# first login after this field started being stamped. profile_picture is
+# null until the user uploads one via PATCH /auth/me/ (see above) - also not
+# on the original ERD, flagged for the same future revision.
 
 ## User Management (Admin Dashboard)
 Admin only. Manages the same tbl_user accounts students log into on mobile -

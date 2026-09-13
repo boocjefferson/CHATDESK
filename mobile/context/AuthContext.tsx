@@ -11,6 +11,7 @@ export type ChatDeskUser = {
   course: string | null;
   school_id: string | null;
   is_email_verified: boolean;
+  profile_picture: string | null;
   created_at: string;
 };
 
@@ -29,6 +30,7 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<ChatDeskUser>;
   register: (payload: RegisterPayload) => Promise<ChatDeskUser>;
   logout: () => Promise<void>;
+  updateCurrentUser: (partial: Partial<ChatDeskUser>) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -84,8 +86,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateCurrentUser = (partial: Partial<ChatDeskUser>) => {
+    setCurrentUser((prev) => (prev ? { ...prev, ...partial } : prev));
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser, isLoading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ currentUser, isLoading, login, register, logout, updateCurrentUser }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -44,7 +44,8 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        return Response(RegisterSerializer(user).data, status=status.HTTP_201_CREATED)
+        response_serializer = RegisterSerializer(user, context=self.get_serializer_context())
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class LoginView(APIView):
@@ -307,7 +308,8 @@ class UserListCreateView(generics.ListCreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
+        response_serializer = UserSerializer(user, context=self.get_serializer_context())
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):

@@ -62,6 +62,7 @@ class User(AbstractUser):
         max_length=10, choices=Course.choices, null=True, blank=True
     )
     school_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    profile_picture = models.ImageField(upload_to="profile_pictures/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     # Defaults True so existing/admin-created accounts aren't retroactively
     # locked out - only RegisterSerializer's public self-registration flow

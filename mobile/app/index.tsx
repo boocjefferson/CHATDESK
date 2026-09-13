@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -90,7 +91,11 @@ export default function StudentChatScreen() {
             hitSlop={12}
             style={({ pressed }) => [styles.avatar, pressed && styles.pressedIcon]}
           >
-            <Text style={styles.avatarText}>{userInitial}</Text>
+            {currentUser?.profile_picture ? (
+              <Image source={{ uri: currentUser.profile_picture }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>{userInitial}</Text>
+            )}
           </Pressable>
         </View>
 
@@ -236,12 +241,14 @@ const createStyles = (colors: ThemePalette) =>
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: colors.surface,
+      overflow: "hidden",
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.1,
       shadowRadius: 3,
       elevation: 2,
     },
+    avatarImage: { width: 30, height: 30 },
     avatarText: { fontFamily: "Montserrat_700Bold", color: colors.accentText, fontSize: 12 },
     phaseBanner: {
       flexDirection: "row",
