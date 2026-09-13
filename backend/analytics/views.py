@@ -4,17 +4,27 @@ from rest_framework.views import APIView
 
 from inquiry_logs.models import InquiryLog
 from tickets.models import Ticket
-from users.permissions import IsAdmin
+from users.permissions import IsOfficeStaff
 
 
 class AnalyticsOverviewView(APIView):
-    """GET /api/v1/analytics/overview/ - admin only.
+    """GET /api/v1/analytics/overview/ - superadmin or office_admin.
+    Office Admins see only their own office's slice (tickets assigned to
+    their office, and inquiry logs that escalated into one of those
+    tickets - logs the chatbot resolved on its own were never routed to any
+    office, so they aren't attributable to one).
     Optional ?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD to scope the range."""
 
-    permission_classes = [IsAdmin]
+    permission_classes = [IsOfficeStaff]
 
     def get(self, request):
+        user = request.user
         logs = InquiryLog.objects.all()
+        tickets_base = Ticket.objects.all()
+        if user.role == user.Role.OFFICE_ADMIN:
+            logs = logs.filter(ticket__office=user.office)
+            tickets_base = tickets_base.filter(office=user.office)
+
         date_from = request.query_params.get("date_from")
         date_to = request.query_params.get("date_to")
         if date_from:
@@ -29,7 +39,7 @@ class AnalyticsOverviewView(APIView):
                           .order_by("-count")
         ]
 
-        tickets = Ticket.objects.all()
+        tickets = tickets_base
         if date_from:
             tickets = tickets.filter(created_at__date__gte=date_from)
         if date_to:

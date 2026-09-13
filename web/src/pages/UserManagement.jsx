@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { createUser, deleteUser, getUsers, updateUser } from "../api/users.js";
+import { getOffices } from "../api/offices.js";
 import UserFormModal from "../components/UserFormModal.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+
+const ROLE_LABELS = { student: "Student", superadmin: "Super Admin", office_admin: "Office Admin" };
 
 function initialsFor(firstName, lastName) {
   return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
@@ -11,6 +14,7 @@ function initialsFor(firstName, lastName) {
 export default function UserManagement() {
   const { currentUser } = useAuth();
   const [users, setUsers] = useState([]);
+  const [offices, setOffices] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -42,6 +46,12 @@ export default function UserManagement() {
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, roleFilter, statusFilter]);
+
+  useEffect(() => {
+    getOffices()
+      .then((res) => setOffices(res.data.results ?? res.data))
+      .catch(() => {});
+  }, []);
 
   const visibleUsers = useMemo(() => {
     return [...users].sort((a, b) => {
@@ -124,6 +134,7 @@ export default function UserManagement() {
         >
           <option value="All">All Roles</option>
           <option value="student">Student</option>
+          <option value="office_admin">Office Admin</option>
           <option value="superadmin">Super Admin</option>
         </select>
         <select
@@ -161,6 +172,7 @@ export default function UserManagement() {
               <th className="px-5 py-3">Name</th>
               <th className="px-5 py-3">School ID</th>
               <th className="px-5 py-3">Role</th>
+              <th className="px-5 py-3">Office</th>
               <th className="px-5 py-3">Status</th>
               <th className="px-5 py-3">Last Login</th>
               <th className="px-5 py-3 text-right">Actions</th>
@@ -169,14 +181,14 @@ export default function UserManagement() {
           <tbody>
             {visibleUsers.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-5 py-14 text-center text-sm text-gray-500">
+                <td colSpan={7} className="px-5 py-14 text-center text-sm text-gray-500">
                   No users found.
                 </td>
               </tr>
             ) : (
               visibleUsers.map((user) => {
                 const isSelf = user.user_id === currentUser?.user_id;
-                const isAdmin = user.role === "superadmin";
+                const isAdmin = user.role === "superadmin" || user.role === "office_admin";
                 return (
                   <tr
                     key={user.user_id}
@@ -208,7 +220,8 @@ export default function UserManagement() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-gray-500">{user.school_id || "—"}</td>
-                    <td className="px-5 py-3.5 capitalize text-gray-500">{user.role}</td>
+                    <td className="px-5 py-3.5 text-gray-500">{ROLE_LABELS[user.role] ?? user.role}</td>
+                    <td className="px-5 py-3.5 text-gray-500">{user.office_name || "—"}</td>
                     <td className="px-5 py-3.5">
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -275,6 +288,7 @@ export default function UserManagement() {
       {isModalOpen && (
         <UserFormModal
           initialUser={editingUser}
+          offices={offices}
           onSave={handleSave}
           onClose={() => setIsModalOpen(false)}
         />

@@ -6,6 +6,7 @@ const navItems = [
   {
     label: "User Management",
     to: "/users",
+    superAdminOnly: true,
     icon: (
       <path
         d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"
@@ -72,6 +73,7 @@ const navItems = [
   {
     label: "Announcements",
     to: "/announcements",
+    superAdminOnly: true,
     icon: (
       <path
         d="M4 6h11l4-3v18l-4-3H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1ZM8 15v3a2 2 0 0 0 2 2h1"
@@ -85,6 +87,7 @@ const navItems = [
   {
     label: "Phases",
     to: "/phases",
+    superAdminOnly: true,
     icon: (
       <path
         d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"
@@ -98,6 +101,7 @@ const navItems = [
   {
     label: "Offices",
     to: "/offices",
+    superAdminOnly: true,
     icon: (
       <path
         d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"
@@ -130,6 +134,9 @@ function initialsFor(email) {
 
 export default function Sidebar() {
   const { currentUser, logout } = useAuth();
+  const visibleNavItems = navItems.filter(
+    (item) => !item.superAdminOnly || currentUser?.role === "superadmin"
+  );
 
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col justify-between bg-navy px-5 py-6 text-white">
@@ -141,8 +148,14 @@ export default function Sidebar() {
           </span>
         </div>
 
+        {currentUser?.role === "office_admin" && currentUser?.office_name && (
+          <p className="mb-4 truncate px-1 text-xs font-semibold uppercase tracking-wide text-gold">
+            {currentUser.office_name}
+          </p>
+        )}
+
         <nav className="space-y-1">
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.label}
               to={item.to}

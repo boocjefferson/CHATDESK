@@ -10,23 +10,45 @@ class FaqListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = Faq.objects.all().order_by("-created_at")
+        user = self.request.user
         category = self.request.query_params.get("category")
-        office = self.request.query_params.get("office")
         if category:
             qs = qs.filter(category=category)
+
+        # Office Admins only ever see their own office's FAQs - the ?office=
+        # param is for Super Admin filtering and is ignored for them.
+        if user.is_authenticated and user.role == user.Role.OFFICE_ADMIN:
+            return qs.filter(office=user.office)
+        office = self.request.query_params.get("office")
         if office:
             qs = qs.filter(office_id=office)
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user, updated_by=self.request.user)
+        user = self.request.user
+        extra = {"user": user, "updated_by": user}
+        if user.role == user.Role.OFFICE_ADMIN:
+            # Force-assigned, not client-supplied - an Office Admin can only
+            # ever create FAQs for their own office.
+            extra["office"] = user.office
+        serializer.save(**extra)
 
 
 class FaqDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Faq.objects.all()
     serializer_class = FaqSerializer
     permission_classes = [IsAdminOrReadOnly]
     lookup_field = "faq_id"
 
+    def get_queryset(self):
+        qs = Faq.objects.all()
+        user = self.request.user
+        if user.is_authenticated and user.role == user.Role.OFFICE_ADMIN:
+            return qs.filter(office=user.office)
+        return qs
+
     def perform_update(self, serializer):
-        serializer.save(updated_by=self.request.user)
+        user = self.request.user
+        extra = {"updated_by": user}
+        if user.role == user.Role.OFFICE_ADMIN:
+            extra["office"] = user.office
+        serializer.save(**extra)

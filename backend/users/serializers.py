@@ -4,6 +4,8 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from offices.models import Office
+
 from .models import User
 from .services import send_verification_email
 
@@ -11,7 +13,10 @@ from .services import send_verification_email
 class UserSerializer(serializers.ModelSerializer):
     """Read-only user profile shape, per claude/API_CONTRACT.md. is_active and
     last_login are included for the admin User Management screen; last_login
-    is stamped via update_last_login() below on every successful JWT login."""
+    is stamped via update_last_login() below on every successful JWT login.
+    office/office_name are only meaningful for role=office_admin."""
+
+    office_name = serializers.CharField(source="office.name", read_only=True, default=None)
 
     class Meta:
         model = User
@@ -24,6 +29,8 @@ class UserSerializer(serializers.ModelSerializer):
             "course",
             "school_id",
             "profile_picture",
+            "office",
+            "office_name",
             "is_active",
             "is_email_verified",
             "last_login",
@@ -167,21 +174,41 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
     email and password are out of scope here (see users/views.py for the
     self-protection guards against locking the acting admin out)."""
 
+    office = serializers.PrimaryKeyRelatedField(
+        queryset=Office.objects.all(), required=False, allow_null=True
+    )
+
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "role", "course", "school_id", "is_active"]
+        fields = ["first_name", "last_name", "role", "course", "school_id", "is_active", "office"]
+
+    def validate(self, attrs):
+        role = attrs.get("role", self.instance.role if self.instance else User.Role.STUDENT)
+        if role == User.Role.OFFICE_ADMIN:
+            office = attrs.get("office", self.instance.office if self.instance else None)
+            if not office:
+                raise serializers.ValidationError(
+                    {"office": "An office must be assigned for the Office Admin role."}
+                )
+        elif "role" in attrs:
+            # Switching away from Office Admin - clear the now-meaningless office.
+            attrs["office"] = None
+        return attrs
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
     """POST /api/v1/users/ - admin only. Unlike self-registration, the admin
-    picks the role directly (student or admin)."""
+    picks the role directly (student, office_admin, or superadmin)."""
 
     password = serializers.CharField(write_only=True, min_length=8)
     role = serializers.ChoiceField(choices=User.Role.choices, default=User.Role.STUDENT)
+    office = serializers.PrimaryKeyRelatedField(
+        queryset=Office.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = User
-        fields = ["email", "password", "first_name", "last_name", "role", "course", "school_id"]
+        fields = ["email", "password", "first_name", "last_name", "role", "course", "school_id", "office"]
 
     def validate_email(self, value):
         value = value.lower().strip()
@@ -196,6 +223,15 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if User.objects.filter(school_id__iexact=value).exists():
             raise serializers.ValidationError("An account with this School ID already exists.")
         return value
+
+    def validate(self, attrs):
+        if attrs.get("role") == User.Role.OFFICE_ADMIN and not attrs.get("office"):
+            raise serializers.ValidationError(
+                {"office": "An office must be assigned for the Office Admin role."}
+            )
+        if attrs.get("role") != User.Role.OFFICE_ADMIN:
+            attrs["office"] = None
+        return attrs
 
     def create(self, validated_data):
         password = validated_data.pop("password")

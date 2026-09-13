@@ -7,4 +7,4 @@ class IsAdminOrReadOnly(permissions.BasePermission):
             return False
         if request.method in permissions.SAFE_METHODS:
             return True
-        return request.user.role == "superadmin"
+        return request.user.role in ("superadmin", "office_admin")

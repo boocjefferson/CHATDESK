@@ -58,7 +58,12 @@ export default function AdminSettings() {
         <p className="text-sm text-gray-500">Signed in as</p>
         <p className="font-medium text-navy">{currentUser?.email}</p>
         <p className="text-sm text-gray-500">
-          Role: {currentUser?.role === "superadmin" ? "Super Admin" : currentUser?.role}
+          Role:{" "}
+          {currentUser?.role === "superadmin"
+            ? "Super Admin"
+            : currentUser?.role === "office_admin"
+            ? `Office Admin — ${currentUser?.office_name ?? "Unassigned"}`
+            : currentUser?.role}
         </p>
       </div>
 

@@ -2,7 +2,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from users.permissions import IsAdmin, IsStudent
+from users.permissions import IsOfficeStaff, IsStudent
 
 from .models import InquiryLog
 from .serializers import ChatAskSerializer, InquiryLogSerializer
@@ -51,8 +51,17 @@ class ChatAskView(APIView):
 
 
 class InquiryLogListView(generics.ListAPIView):
-    """GET /api/v1/inquiry-logs/ - admin only. Raw logs for system analytics."""
+    """GET /api/v1/inquiry-logs/ - superadmin or office_admin. Raw logs for
+    system analytics. Office Admins only see logs that escalated into a
+    ticket assigned to their own office - unescalated logs have no office
+    to attribute them to."""
 
-    queryset = InquiryLog.objects.all()
     serializer_class = InquiryLogSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsOfficeStaff]
+
+    def get_queryset(self):
+        qs = InquiryLog.objects.all()
+        user = self.request.user
+        if user.role == user.Role.OFFICE_ADMIN:
+            return qs.filter(ticket__office=user.office)
+        return qs

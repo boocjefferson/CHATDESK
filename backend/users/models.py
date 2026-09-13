@@ -17,6 +17,7 @@ class User(AbstractUser):
     class Role(models.TextChoices):
         STUDENT = "student", "Student"
         SUPERADMIN = "superadmin", "Super Admin"
+        OFFICE_ADMIN = "office_admin", "Office Admin"
 
     # USTP CDO course codes, confirmed by Jefferson against the official
     # program list. BSN predates that confirmation and isn't on it, but
@@ -57,12 +58,20 @@ class User(AbstractUser):
     email = models.EmailField("email address", unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
-    role = models.CharField(max_length=10, choices=Role.choices, default=Role.STUDENT)
+    role = models.CharField(max_length=12, choices=Role.choices, default=Role.STUDENT)
     course = models.CharField(
         max_length=10, choices=Course.choices, null=True, blank=True
     )
     school_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
     profile_picture = models.ImageField(upload_to="profile_pictures/", null=True, blank=True)
+    # Which office/college this account represents. Required for OFFICE_ADMIN
+    # (enforced in serializers, not here, so students/superadmins can stay
+    # null); every FAQ/Ticket queryset an Office Admin touches is scoped to
+    # this office.
+    office = models.ForeignKey(
+        "offices.Office", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="staff_members",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     # Defaults True so existing/admin-created accounts aren't retroactively
     # locked out - only RegisterSerializer's public self-registration flow

@@ -3,8 +3,11 @@ import { getTickets, updateTicket } from "../api/tickets.js";
 import { getOffices } from "../api/offices.js";
 import TicketStatusBadge from "../components/TicketStatusBadge.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function TicketManagement() {
+  const { currentUser } = useAuth();
+  const isOfficeAdmin = currentUser?.role === "office_admin";
   const [tickets, setTickets] = useState([]);
   const [offices, setOffices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -166,19 +169,21 @@ export default function TicketManagement() {
             </option>
           ))}
         </select>
-        <select
-          value={officeFilter}
-          onChange={(e) => setOfficeFilter(e.target.value)}
-          className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
-        >
-          <option value="All">All Offices</option>
-          <option value="Unassigned">Unassigned</option>
-          {offices.map((o) => (
-            <option key={o.office_id} value={String(o.office_id)}>
-              {o.name}
-            </option>
-          ))}
-        </select>
+        {!isOfficeAdmin && (
+          <select
+            value={officeFilter}
+            onChange={(e) => setOfficeFilter(e.target.value)}
+            className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
+          >
+            <option value="All">All Offices</option>
+            <option value="Unassigned">Unassigned</option>
+            {offices.map((o) => (
+              <option key={o.office_id} value={String(o.office_id)}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+        )}
         <button
           type="button"
           onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
@@ -233,25 +238,27 @@ export default function TicketManagement() {
                   {expandedTicketId === ticket.ticket_id && (
                     <tr className="border-b border-gray-50 bg-gray-50/60">
                       <td colSpan={5} className="px-5 py-3">
-                        <div
-                          className="mb-3 flex items-center gap-3"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <label className="text-sm font-medium text-gray-600">Route to office:</label>
-                          <select
-                            value={ticket.office ?? ""}
-                            disabled={isAssigningOffice}
-                            onChange={(e) => handleAssignOffice(ticket.ticket_id, e.target.value)}
-                            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40 disabled:opacity-50"
+                        {!isOfficeAdmin && (
+                          <div
+                            className="mb-3 flex items-center gap-3"
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <option value="">Unassigned</option>
-                            {offices.map((o) => (
-                              <option key={o.office_id} value={o.office_id}>
-                                {o.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
+                            <label className="text-sm font-medium text-gray-600">Route to office:</label>
+                            <select
+                              value={ticket.office ?? ""}
+                              disabled={isAssigningOffice}
+                              onChange={(e) => handleAssignOffice(ticket.ticket_id, e.target.value)}
+                              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40 disabled:opacity-50"
+                            >
+                              <option value="">Unassigned</option>
+                              {offices.map((o) => (
+                                <option key={o.office_id} value={o.office_id}>
+                                  {o.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
                         <div
                           className="flex items-end gap-3"
                           onClick={(e) => e.stopPropagation()}

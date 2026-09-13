@@ -2,7 +2,7 @@ import { useState } from "react";
 
 const COURSES = ["BSIT", "BSCS", "BSN", "BSBA", "BSED", "BSA", "BSCE", "BSEE"];
 
-export default function UserFormModal({ initialUser, onSave, onClose }) {
+export default function UserFormModal({ initialUser, offices, onSave, onClose }) {
   const isEditing = Boolean(initialUser);
   const [firstName, setFirstName] = useState(initialUser?.first_name ?? "");
   const [lastName, setLastName] = useState(initialUser?.last_name ?? "");
@@ -11,6 +11,7 @@ export default function UserFormModal({ initialUser, onSave, onClose }) {
   const [role, setRole] = useState(initialUser?.role ?? "student");
   const [course, setCourse] = useState(initialUser?.course ?? COURSES[0]);
   const [schoolId, setSchoolId] = useState(initialUser?.school_id ?? "");
+  const [office, setOffice] = useState(initialUser?.office ?? "");
   const [isActive, setIsActive] = useState(initialUser?.is_active ?? true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -27,6 +28,7 @@ export default function UserFormModal({ initialUser, onSave, onClose }) {
           role,
           course: role === "student" ? course : null,
           school_id: role === "student" ? schoolId : null,
+          office: role === "office_admin" ? office || null : null,
           is_active: isActive,
         });
       } else {
@@ -37,6 +39,7 @@ export default function UserFormModal({ initialUser, onSave, onClose }) {
           last_name: lastName,
           role,
           ...(role === "student" ? { course, school_id: schoolId } : {}),
+          ...(role === "office_admin" ? { office: office || null } : {}),
         });
       }
       onClose();
@@ -110,8 +113,26 @@ export default function UserFormModal({ initialUser, onSave, onClose }) {
           className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gold/40"
         >
           <option value="student">Student</option>
+          <option value="office_admin">Office Admin</option>
           <option value="superadmin">Super Admin</option>
         </select>
+
+        {role === "office_admin" && (
+          <>
+            <label className="mb-1 block text-sm text-gray-600">Office</label>
+            <select
+              value={office}
+              onChange={(e) => setOffice(e.target.value)}
+              required
+              className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gold/40"
+            >
+              <option value="" disabled>Select an office</option>
+              {(offices ?? []).map((o) => (
+                <option key={o.office_id} value={o.office_id}>{o.name}</option>
+              ))}
+            </select>
+          </>
+        )}
 
         {role === "student" && (
           <>

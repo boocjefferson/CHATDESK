@@ -3,8 +3,11 @@ import { createFaq, deleteFaq, getFaqs, updateFaq } from "../api/faqs.js";
 import { getOffices } from "../api/offices.js";
 import FaqFormModal, { CATEGORIES } from "../components/FaqFormModal.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function FaqManagement() {
+  const { currentUser } = useAuth();
+  const isOfficeAdmin = currentUser?.role === "office_admin";
   const [faqs, setFaqs] = useState([]);
   const [offices, setOffices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -126,19 +129,21 @@ export default function FaqManagement() {
             </option>
           ))}
         </select>
-        <select
-          value={officeFilter}
-          onChange={(e) => setOfficeFilter(e.target.value)}
-          className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
-        >
-          <option value="All">All Offices</option>
-          <option value="Unassigned">Unassigned</option>
-          {offices.map((o) => (
-            <option key={o.office_id} value={String(o.office_id)}>
-              {o.name}
-            </option>
-          ))}
-        </select>
+        {!isOfficeAdmin && (
+          <select
+            value={officeFilter}
+            onChange={(e) => setOfficeFilter(e.target.value)}
+            className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
+          >
+            <option value="All">All Offices</option>
+            <option value="Unassigned">Unassigned</option>
+            {offices.map((o) => (
+              <option key={o.office_id} value={String(o.office_id)}>
+                {o.name}
+              </option>
+            ))}
+          </select>
+        )}
         <button
           type="button"
           onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
@@ -238,6 +243,7 @@ export default function FaqManagement() {
         <FaqFormModal
           initialFaq={editingFaq}
           offices={offices}
+          hideOfficeField={isOfficeAdmin}
           onSave={handleSave}
           onClose={() => setIsModalOpen(false)}
         />

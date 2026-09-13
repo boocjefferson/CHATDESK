@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework import generics, permissions, status as http_status
 from rest_framework.response import Response
 
-from users.permissions import IsAdmin, IsStudent
+from users.permissions import IsOfficeStaff, IsStudent
 
 from .models import Ticket
 from .serializers import TicketCreateSerializer, TicketSerializer, TicketUpdateSerializer
@@ -13,7 +13,9 @@ from .serializers import TicketCreateSerializer, TicketSerializer, TicketUpdateS
 
 class TicketListCreateView(generics.ListCreateAPIView):
     """
-    GET  /api/v1/tickets/ - admin: all tickets (?status=, ?category=, ?office= filters).
+    GET  /api/v1/tickets/ - superadmin: all tickets (?status=, ?category=, ?office= filters).
+                            office_admin: tickets routed to their own office only
+                            (?status=, ?category= filters; ?office= is ignored).
                             student: own tickets only.
     POST /api/v1/tickets/ - student only, manual creation bypassing the AI.
     """
@@ -21,10 +23,10 @@ class TicketListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         qs = Ticket.objects.all()
+        status_param = self.request.query_params.get("status")
+        category_param = self.request.query_params.get("category")
 
         if user.role == user.Role.SUPERADMIN:
-            status_param = self.request.query_params.get("status")
-            category_param = self.request.query_params.get("category")
             office_param = self.request.query_params.get("office")
             if status_param:
                 qs = qs.filter(status=status_param)
@@ -32,6 +34,14 @@ class TicketListCreateView(generics.ListCreateAPIView):
                 qs = qs.filter(subject_category=category_param)
             if office_param:
                 qs = qs.filter(office_id=office_param)
+            return qs
+
+        if user.role == user.Role.OFFICE_ADMIN:
+            qs = qs.filter(office=user.office)
+            if status_param:
+                qs = qs.filter(status=status_param)
+            if category_param:
+                qs = qs.filter(subject_category=category_param)
             return qs
 
         # Students always see only their own tickets - ownership is enforced
@@ -55,8 +65,11 @@ class TicketListCreateView(generics.ListCreateAPIView):
 
 class TicketDetailView(generics.RetrieveUpdateAPIView):
     """
-    GET   /api/v1/tickets/{ticket_id}/ - all roles; students restricted to their own.
-    PATCH /api/v1/tickets/{ticket_id}/ - admin only.
+    GET   /api/v1/tickets/{ticket_id}/ - all roles; students restricted to
+          their own, office_admin restricted to their office's tickets.
+    PATCH /api/v1/tickets/{ticket_id}/ - superadmin or office_admin. An
+          office_admin can update status/resolution but can't reroute a
+          ticket to a different office - see perform_update below.
     """
 
     lookup_url_kwarg = "ticket_id"
@@ -65,6 +78,8 @@ class TicketDetailView(generics.RetrieveUpdateAPIView):
         user = self.request.user
         if user.role == user.Role.SUPERADMIN:
             return Ticket.objects.all()
+        if user.role == user.Role.OFFICE_ADMIN:
+            return Ticket.objects.filter(office=user.office)
         return Ticket.objects.filter(user=user)
 
     def get_serializer_class(self):
@@ -72,11 +87,14 @@ class TicketDetailView(generics.RetrieveUpdateAPIView):
 
     def get_permissions(self):
         if self.request.method == "PATCH":
-            return [IsAdmin()]
+            return [IsOfficeStaff()]
         return [permissions.IsAuthenticated()]
 
     def perform_update(self, serializer):
+        user = self.request.user
         ticket = self.get_object()
+        if user.role == user.Role.OFFICE_ADMIN:
+            serializer.validated_data.pop("office", None)
         extra = {}
         if serializer.validated_data.get("status") == Ticket.Status.RESOLVED:
             if ticket.resolved_by_id is None:

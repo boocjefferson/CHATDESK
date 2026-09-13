@@ -10,7 +10,7 @@ const PAGE_META = {
   "/announcements": { title: "Announcements", subtitle: "Broadcast updates to all students" },
   "/phases": { title: "Phases", subtitle: "Manage USTP calendar phases and student guidance" },
   "/offices": { title: "Offices", subtitle: "Manage offices and colleges for routing FAQs and tickets" },
-  "/settings": { title: "Settings", subtitle: "Manage your Super Admin account" },
+  "/settings": { title: "Settings", subtitle: "Manage your account" },
 };
 
 export default function AdminDashboardLayout() {
