@@ -9,6 +9,7 @@ writes the reply text itself - that's always the FAQ's own answer_content.
 import json
 
 from django.conf import settings
+from django.db import models
 from openai import OpenAI
 
 from faqs.models import Faq
@@ -43,8 +44,19 @@ clearly match any listed intent, return null - never guess."""
 _client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
-def classify_message(message: str) -> dict:
-    faqs_by_keyword = {faq.intent_keyword: faq for faq in Faq.objects.all()}
+def classify_message(message: str, office=None) -> dict:
+    """
+    office: the Office the student picked in the mobile category selector
+    (optional). When set, the candidate FAQ pool is narrowed to that office's
+    FAQs plus any un-categorized ones (office=None) - narrowing improves
+    classification accuracy and, on escalation, lets the resulting ticket be
+    routed automatically instead of left for a Super Admin to triage by hand.
+    """
+    candidate_faqs = Faq.objects.all()
+    if office is not None:
+        candidate_faqs = candidate_faqs.filter(models.Q(office=office) | models.Q(office__isnull=True))
+
+    faqs_by_keyword = {faq.intent_keyword: faq for faq in candidate_faqs}
     if not faqs_by_keyword:
         return ESCALATION_RESULT
 

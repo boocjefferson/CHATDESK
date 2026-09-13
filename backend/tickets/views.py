@@ -13,10 +13,12 @@ from .serializers import TicketCreateSerializer, TicketSerializer, TicketUpdateS
 
 class TicketListCreateView(generics.ListCreateAPIView):
     """
-    GET  /api/v1/tickets/ - superadmin: all tickets (?status=, ?category=, ?office= filters).
-                            office_admin: tickets routed to their own office only
-                            (?status=, ?category= filters; ?office= is ignored).
-                            student: own tickets only.
+    GET  /api/v1/tickets/ - superadmin: all tickets (?status=, ?category=,
+                            ?office=, ?search= filters). office_admin: tickets
+                            routed to their own office only (?status=,
+                            ?category=, ?search=; ?office= is ignored).
+                            student: own tickets only. ?search= matches
+                            issue_description. Paginated.
     POST /api/v1/tickets/ - student only, manual creation bypassing the AI.
     """
 
@@ -25,6 +27,7 @@ class TicketListCreateView(generics.ListCreateAPIView):
         qs = Ticket.objects.all()
         status_param = self.request.query_params.get("status")
         category_param = self.request.query_params.get("category")
+        search = self.request.query_params.get("search")
 
         if user.role == user.Role.SUPERADMIN:
             office_param = self.request.query_params.get("office")
@@ -34,6 +37,8 @@ class TicketListCreateView(generics.ListCreateAPIView):
                 qs = qs.filter(subject_category=category_param)
             if office_param:
                 qs = qs.filter(office_id=office_param)
+            if search:
+                qs = qs.filter(issue_description__icontains=search)
             return qs
 
         if user.role == user.Role.OFFICE_ADMIN:
@@ -42,6 +47,8 @@ class TicketListCreateView(generics.ListCreateAPIView):
                 qs = qs.filter(status=status_param)
             if category_param:
                 qs = qs.filter(subject_category=category_param)
+            if search:
+                qs = qs.filter(issue_description__icontains=search)
             return qs
 
         # Students always see only their own tickets - ownership is enforced

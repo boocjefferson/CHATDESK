@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import generics
 from .models import Faq
 from .permissions import IsAdminOrReadOnly
@@ -5,6 +6,10 @@ from .serializers import FaqSerializer
 
 
 class FaqListCreateView(generics.ListCreateAPIView):
+    """?search= matches question_text or intent_keyword. ?category=,
+    ?office= filter exactly. All combine with AND; paginated per
+    settings.REST_FRAMEWORK PAGE_SIZE."""
+
     serializer_class = FaqSerializer
     permission_classes = [IsAdminOrReadOnly]
 
@@ -14,6 +19,9 @@ class FaqListCreateView(generics.ListCreateAPIView):
         category = self.request.query_params.get("category")
         if category:
             qs = qs.filter(category=category)
+        search = self.request.query_params.get("search")
+        if search:
+            qs = qs.filter(Q(question_text__icontains=search) | Q(intent_keyword__icontains=search))
 
         # Office Admins only ever see their own office's FAQs - the ?office=
         # param is for Super Admin filtering and is ignored for them.

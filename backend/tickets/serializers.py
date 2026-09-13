@@ -36,9 +36,11 @@ class TicketCreateSerializer(serializers.ModelSerializer):
 
 
 class TicketUpdateSerializer(serializers.ModelSerializer):
-    """PATCH /api/v1/tickets/{id}/ - admin only. Status, resolution text, and
-    which office is responsible (routing); resolved_by and resolved_at are
-    set server-side in the view, not accepted as input."""
+    """PATCH /api/v1/tickets/{id}/ - admin only. Status, resolution text,
+    subject_category (auto-escalated tickets start as the generic
+    "Unresolved Inquiry" - the admin can set a real category once they've
+    read the issue), and which office is responsible (routing); resolved_by
+    and resolved_at are set server-side in the view, not accepted as input."""
 
     office = serializers.PrimaryKeyRelatedField(
         queryset=Office.objects.all(), required=False, allow_null=True
@@ -46,4 +48,4 @@ class TicketUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ticket
-        fields = ["status", "resolution", "office"]
+        fields = ["status", "resolution", "office", "subject_category"]

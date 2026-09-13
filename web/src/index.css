@@ -1,3 +1,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Thin, low-contrast scrollbar for the sidebar nav - the browser default
+   looked out of place next to the rest of the redesigned dashboard.
+   Two variants since the sidebar itself can be light or dark. */
+.sidebar-scroll {
+  scrollbar-width: thin;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+}
+
+.sidebar-scroll-dark {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+.sidebar-scroll-dark::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+.sidebar-scroll-dark::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.sidebar-scroll-light {
+  scrollbar-color: rgba(27, 42, 107, 0.15) transparent;
+}
+.sidebar-scroll-light::-webkit-scrollbar-thumb {
+  background-color: rgba(27, 42, 107, 0.15);
+}
+.sidebar-scroll-light::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(27, 42, 107, 0.3);
+}

@@ -1,3 +1,4 @@
+from django.db.models import Q
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -19,11 +20,13 @@ class ChatAskView(APIView):
         serializer = ChatAskSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         message = serializer.validated_data["message"]
+        office = serializer.validated_data.get("office")
 
-        result = classify_message(message)
+        result = classify_message(message, office=office)
 
         log = InquiryLog.objects.create(
             user=request.user,
+            office=office,
             user_message=message,
             detected_intent=result["detected_intent"],
             chatbot_response=result["reply"],
@@ -43,7 +46,7 @@ class ChatAskView(APIView):
             except ImportError:
                 # tickets app lands in feature/ticket-escalation-logic - log is still recorded
                 return Response(payload, status=status.HTTP_201_CREATED)
-            ticket = create_ticket_from_log(log)
+            ticket = create_ticket_from_log(log, office=office)
             payload["ticket_id"] = ticket.ticket_id
             return Response(payload, status=status.HTTP_201_CREATED)
 
@@ -52,9 +55,12 @@ class ChatAskView(APIView):
 
 class InquiryLogListView(generics.ListAPIView):
     """GET /api/v1/inquiry-logs/ - superadmin or office_admin. Raw logs for
-    system analytics. Office Admins only see logs that escalated into a
-    ticket assigned to their own office - unescalated logs have no office
-    to attribute them to."""
+    system analytics. Office Admins only see logs tagged with their office
+    (the student picked it in the mobile category selector) or that
+    escalated into a ticket later routed to their office - a log with
+    neither has no way to be attributed to any one office.
+    ?intent=, ?user_id=, ?is_escalated=, ?date_from=, ?date_to= filter.
+    Paginated."""
 
     serializer_class = InquiryLogSerializer
     permission_classes = [IsOfficeStaff]
@@ -63,5 +69,21 @@ class InquiryLogListView(generics.ListAPIView):
         qs = InquiryLog.objects.all()
         user = self.request.user
         if user.role == user.Role.OFFICE_ADMIN:
-            return qs.filter(ticket__office=user.office)
+            qs = qs.filter(Q(office=user.office) | Q(ticket__office=user.office)).distinct()
+
+        intent = self.request.query_params.get("intent")
+        if intent:
+            qs = qs.filter(detected_intent=intent)
+        user_id = self.request.query_params.get("user_id")
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+        is_escalated = self.request.query_params.get("is_escalated")
+        if is_escalated is not None:
+            qs = qs.filter(is_escalated=is_escalated.lower() in ("1", "true", "yes"))
+        date_from = self.request.query_params.get("date_from")
+        if date_from:
+            qs = qs.filter(timestamp__date__gte=date_from)
+        date_to = self.request.query_params.get("date_to")
+        if date_to:
+            qs = qs.filter(timestamp__date__lte=date_to)
         return qs

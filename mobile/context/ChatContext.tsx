@@ -5,6 +5,8 @@ import axiosClient from "../lib/axiosClient";
 
 export type ChatMessage = { role: "user" | "assistant"; text: string };
 
+export type Office = { office_id: number; name: string };
+
 export type ChatSession = {
   id: string;
   title: string;
@@ -25,6 +27,9 @@ type ChatContextValue = {
   messages: ChatMessage[];
   history: ChatSession[];
   isSending: boolean;
+  offices: Office[];
+  selectedOffice: Office | null;
+  setSelectedOffice: (office: Office | null) => void;
   sendMessage: (text: string) => Promise<void>;
   startNewChat: () => void;
   resumeSession: (sessionId: string) => void;
@@ -37,6 +42,26 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [history, setHistory] = useState<ChatSession[]>([]);
   const [isSending, setIsSending] = useState(false);
+  const [offices, setOffices] = useState<Office[]>([]);
+  const [selectedOffice, setSelectedOffice] = useState<Office | null>(null);
+
+  // The category/office picker on the chat screen - fetched once per
+  // logged-in session. Any authenticated role (including students) can read
+  // this list per offices/permissions.py.
+  useEffect(() => {
+    if (!currentUser) {
+      setOffices([]);
+      return;
+    }
+    (async () => {
+      try {
+        const { data } = await axiosClient.get("/offices/");
+        setOffices(data.results ?? data);
+      } catch {
+        setOffices([]);
+      }
+    })();
+  }, [currentUser]);
 
   // Keyed per-user so one student's chat history never shows up for
   // another student logging into the same device.
@@ -71,7 +96,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     setMessages((prev) => [...prev, { role: "user", text: trimmed }]);
     setIsSending(true);
     try {
-      const { data } = await axiosClient.post("/chat/ask/", { message: trimmed });
+      const { data } = await axiosClient.post("/chat/ask/", {
+        message: trimmed,
+        ...(selectedOffice ? { office: selectedOffice.office_id } : {}),
+      });
       setMessages((prev) => [...prev, { role: "assistant", text: data.reply }]);
     } catch {
       setMessages((prev) => [
@@ -94,6 +122,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       persistHistory([session, ...history]);
     }
     setMessages([]);
+    setSelectedOffice(null);
   };
 
   const resumeSession = (sessionId: string) => {
@@ -117,7 +146,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   return (
     <ChatContext.Provider
-      value={{ messages, history, isSending, sendMessage, startNewChat, resumeSession }}
+      value={{
+        messages,
+        history,
+        isSending,
+        offices,
+        selectedOffice,
+        setSelectedOffice,
+        sendMessage,
+        startNewChat,
+        resumeSession,
+      }}
     >
       {children}
     </ChatContext.Provider>

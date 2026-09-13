@@ -3,8 +3,13 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
+      // Inter app-wide, per Jefferson's request - covers both the default
+      // sans stack (body text, buttons, tables, forms, nav) and the
+      // "plus-jakarta" utility (still used for headings/brand wordmark in a
+      // handful of files) so nothing needs to be touched at the call site.
       fontFamily: {
-        "plus-jakarta": ['"Plus Jakarta Sans"', "sans-serif"],
+        sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+        "plus-jakarta": ["Inter", "sans-serif"],
       },
       // USTP brand palette, pulled from the official e-Learning Portal login
       // screen (Zaki's reference). Reuse these classes app-wide instead of

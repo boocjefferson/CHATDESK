@@ -1,7 +1,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../context/ThemeContext";
 import axiosClient from "../lib/axiosClient";
 import type { ThemePalette } from "../theme/colors";
@@ -20,6 +20,7 @@ export default function TicketsScreen() {
   const styles = createStyles(colors);
   const [tickets, setTickets] = useState<Ticket[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [viewingTicket, setViewingTicket] = useState<Ticket | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -33,10 +34,7 @@ export default function TicketsScreen() {
   }, []);
 
   const handleView = (ticket: Ticket) => {
-    Alert.alert(
-      ticket.subject_category,
-      `You asked: ${ticket.issue_description}\n\nAnswer: ${ticket.resolution ?? "No response yet."}`
-    );
+    setViewingTicket(ticket);
   };
 
   return (
@@ -94,6 +92,46 @@ export default function TicketsScreen() {
           </ScrollView>
         </>
       )}
+
+      <Modal
+        visible={viewingTicket !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewingTicket(null)}
+      >
+        <Pressable style={styles.modalBackdrop} onPress={() => setViewingTicket(null)}>
+          <Pressable style={styles.modalCard} onPress={(e) => e.stopPropagation()}>
+            {viewingTicket ? (
+              <>
+                <View style={styles.modalHeader}>
+                  <View style={styles.modalHeaderText}>
+                    <Text style={styles.modalEyebrow}>Ticket {viewingTicket.ticket_id}</Text>
+                    <Text style={styles.modalTitle}>{viewingTicket.subject_category}</Text>
+                  </View>
+                  <View style={styles.modalStatusBadge}>
+                    <MaterialIcons name="check-circle" size={14} color={colors.accentText} />
+                    <Text style={styles.modalStatusText}>Resolved</Text>
+                  </View>
+                </View>
+
+                <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                  <Text style={styles.modalSectionLabel}>You asked</Text>
+                  <Text style={styles.modalSectionText}>{viewingTicket.issue_description}</Text>
+
+                  <Text style={[styles.modalSectionLabel, styles.modalSectionLabelSpaced]}>Answer</Text>
+                  <Text style={styles.modalSectionText}>
+                    {viewingTicket.resolution ?? "No response yet."}
+                  </Text>
+                </ScrollView>
+
+                <Pressable style={styles.modalCloseButton} onPress={() => setViewingTicket(null)}>
+                  <Text style={styles.modalCloseButtonText}>Close</Text>
+                </Pressable>
+              </>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -152,4 +190,84 @@ const createStyles = (colors: ThemePalette) =>
     viewButtonDisabled: { borderColor: colors.border },
     viewButtonText: { fontFamily: "Montserrat_700Bold", fontSize: 13, color: colors.textPrimary },
     viewButtonTextDisabled: { color: colors.textMuted },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.5)",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+    },
+    modalCard: {
+      width: "100%",
+      maxWidth: 420,
+      maxHeight: "75%",
+      backgroundColor: colors.surface,
+      borderRadius: 20,
+      padding: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.25,
+      shadowRadius: 20,
+      elevation: 10,
+    },
+    modalHeader: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+      gap: 12,
+      marginBottom: 16,
+    },
+    modalHeaderText: { flex: 1 },
+    modalEyebrow: {
+      fontFamily: "Montserrat_400Regular",
+      fontSize: 12,
+      color: colors.textMuted,
+      marginBottom: 2,
+    },
+    modalTitle: {
+      fontFamily: "PlusJakartaSans_700Bold",
+      fontSize: 19,
+      color: colors.textPrimary,
+    },
+    modalStatusBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      backgroundColor: colors.accent + "1A",
+      borderRadius: 999,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+    },
+    modalStatusText: {
+      fontFamily: "Montserrat_700Bold",
+      fontSize: 12,
+      color: colors.accentText,
+    },
+    modalBody: { marginBottom: 16 },
+    modalSectionLabel: {
+      fontFamily: "Montserrat_700Bold",
+      fontSize: 12,
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+      color: colors.textSecondary,
+      marginBottom: 6,
+    },
+    modalSectionLabelSpaced: { marginTop: 16 },
+    modalSectionText: {
+      fontFamily: "Montserrat_400Regular",
+      fontSize: 15,
+      lineHeight: 21,
+      color: colors.textPrimary,
+    },
+    modalCloseButton: {
+      backgroundColor: colors.accent,
+      borderRadius: 14,
+      paddingVertical: 13,
+      alignItems: "center",
+    },
+    modalCloseButtonText: {
+      fontFamily: "Montserrat_700Bold",
+      fontSize: 15,
+      color: colors.white,
+    },
   });

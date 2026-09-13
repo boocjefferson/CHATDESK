@@ -192,7 +192,7 @@ export default function PhaseManagement() {
                       {phase.start_date} — {phase.end_date}
                     </td>
                     <td className="px-5 py-3.5">
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>
+                      <span className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>
                         {status.label}
                       </span>
                     </td>

@@ -13,7 +13,7 @@ const LABELS = {
 export default function TicketStatusBadge({ status }) {
   return (
     <span
-      className={`rounded-full px-3 py-1 text-xs font-medium ${
+      className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium ${
         STYLES[status] ?? "bg-gray-100 text-gray-600"
       }`}
     >

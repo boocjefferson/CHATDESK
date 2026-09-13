@@ -2,10 +2,16 @@ import { useEffect, useMemo, useState } from "react";
 import { createUser, deleteUser, getUsers, updateUser } from "../api/users.js";
 import { getOffices } from "../api/offices.js";
 import UserFormModal from "../components/UserFormModal.jsx";
+import Pagination from "../components/Pagination.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
 const ROLE_LABELS = { student: "Student", superadmin: "Super Admin", office_admin: "Office Admin" };
+const ROLE_BADGE_CLASSES = {
+  student: "bg-navy/5 text-navy",
+  office_admin: "bg-status-active/15 text-status-active",
+  superadmin: "bg-gold/15 text-gold",
+};
 
 function initialsFor(firstName, lastName) {
   return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`.toUpperCase() || "?";
@@ -22,14 +28,17 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState(null);
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortDirection, setSortDirection] = useState("asc");
+  const [page, setPage] = useState(1);
 
   const loadUsers = () => {
     setIsLoading(true);
     getUsers({
-      search: search || undefined,
+      page,
+      search: debouncedSearch || undefined,
       role: roleFilter === "All" ? undefined : roleFilter,
       status: statusFilter === "All" ? undefined : statusFilter,
     })
@@ -42,10 +51,19 @@ export default function UserManagement() {
   };
 
   useEffect(() => {
-    const timeout = setTimeout(loadUsers, 300);
+    const timeout = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timeout);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, roleFilter, statusFilter]);
+  }, [debouncedSearch, roleFilter, statusFilter]);
+
+  useEffect(() => {
+    loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, debouncedSearch, roleFilter, statusFilter]);
 
   useEffect(() => {
     getOffices()
@@ -220,11 +238,19 @@ export default function UserManagement() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-gray-500">{user.school_id || "—"}</td>
-                    <td className="px-5 py-3.5 text-gray-500">{ROLE_LABELS[user.role] ?? user.role}</td>
+                    <td className="px-5 py-3.5">
+                      <span
+                        className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          ROLE_BADGE_CLASSES[user.role] ?? "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {ROLE_LABELS[user.role] ?? user.role}
+                      </span>
+                    </td>
                     <td className="px-5 py-3.5 text-gray-500">{user.office_name || "—"}</td>
                     <td className="px-5 py-3.5">
                       <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                        className={`whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           user.is_active
                             ? "bg-status-resolved/15 text-status-resolved"
                             : "bg-gray-100 text-gray-500"
@@ -283,6 +309,7 @@ export default function UserManagement() {
             )}
           </tbody>
         </table>
+        <Pagination page={page} count={totalCount} onPageChange={setPage} />
       </div>
 
       {isModalOpen && (

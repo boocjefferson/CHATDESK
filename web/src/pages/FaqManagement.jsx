@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createFaq, deleteFaq, getFaqs, updateFaq } from "../api/faqs.js";
 import { getOffices } from "../api/offices.js";
 import FaqFormModal, { CATEGORIES } from "../components/FaqFormModal.jsx";
+import Pagination from "../components/Pagination.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -9,59 +10,71 @@ export default function FaqManagement() {
   const { currentUser } = useAuth();
   const isOfficeAdmin = currentUser?.role === "office_admin";
   const [faqs, setFaqs] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [categoriesInUse, setCategoriesInUse] = useState(0);
   const [offices, setOffices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [officeFilter, setOfficeFilter] = useState("All");
-  const [sortDirection, setSortDirection] = useState("asc");
+  const [page, setPage] = useState(1);
 
   const loadFaqs = () => {
     setIsLoading(true);
-    getFaqs()
-      .then((res) => setFaqs(res.data.results ?? res.data))
+    getFaqs({
+      page,
+      search: debouncedSearch || undefined,
+      category: categoryFilter === "All" ? undefined : categoryFilter,
+      office: officeFilter === "All" || officeFilter === "Unassigned" ? undefined : officeFilter,
+    })
+      .then((res) => {
+        setFaqs(res.data.results ?? res.data);
+        setTotalCount(res.data.count ?? (res.data.results ?? res.data).length);
+      })
       .catch(() => setError("Could not load FAQs."))
       .finally(() => setIsLoading(false));
   };
 
+  const loadCategoriesInUse = () => {
+    Promise.all(CATEGORIES.map((category) => getFaqs({ page: 1, category })))
+      .then((results) => {
+        const inUse = results.filter((res) => (res.data.count ?? (res.data.results ?? res.data).length) > 0);
+        setCategoriesInUse(inUse.length);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, categoryFilter, officeFilter]);
+
   useEffect(() => {
     loadFaqs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, debouncedSearch, categoryFilter, officeFilter]);
+
+  useEffect(() => {
+    loadCategoriesInUse();
     getOffices()
       .then((res) => setOffices(res.data.results ?? res.data))
       .catch(() => {});
   }, []);
 
-  const categoriesInUse = useMemo(
-    () => new Set(faqs.map((f) => f.category)).size,
-    [faqs]
-  );
-
-  const visibleFaqs = useMemo(() => {
-    const bySearch = search
-      ? faqs.filter((f) => f.question_text.toLowerCase().includes(search.toLowerCase()))
-      : faqs;
-    const byCategory =
-      categoryFilter === "All" ? bySearch : bySearch.filter((f) => f.category === categoryFilter);
-    const filtered =
-      officeFilter === "All"
-        ? byCategory
-        : officeFilter === "Unassigned"
-        ? byCategory.filter((f) => !f.office)
-        : byCategory.filter((f) => String(f.office) === officeFilter);
-    return [...filtered].sort((a, b) =>
-      sortDirection === "asc"
-        ? a.question_text.localeCompare(b.question_text)
-        : b.question_text.localeCompare(a.question_text)
-    );
-  }, [faqs, search, categoryFilter, officeFilter, sortDirection]);
-
   const handleDelete = async (faqId) => {
     if (!window.confirm("Delete this FAQ?")) return;
     await deleteFaq(faqId);
     loadFaqs();
+    loadCategoriesInUse();
   };
   const handleSave = async (payload) => {
     if (editingFaq) {
@@ -70,9 +83,10 @@ export default function FaqManagement() {
       await createFaq(payload);
     }
     loadFaqs();
+    loadCategoriesInUse();
   };
 
-  if (isLoading) return <LoadingState label="Loading FAQs..." />;
+  if (isLoading && faqs.length === 0) return <LoadingState label="Loading FAQs..." />;
   if (error) return <ErrorState message={error} />;
 
   return (
@@ -80,7 +94,7 @@ export default function FaqManagement() {
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <StatTile
           label="Total FAQs"
-          value={faqs.length}
+          value={totalCount}
           accentClass="bg-navy/10 text-navy"
           icon={
             <path
@@ -146,13 +160,6 @@ export default function FaqManagement() {
         )}
         <button
           type="button"
-          onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
-          className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy transition-colors hover:border-gold"
-        >
-          Sort: {sortDirection === "asc" ? "A-Z" : "Z-A"}
-        </button>
-        <button
-          type="button"
           onClick={() => {
             setEditingFaq(null);
             setIsModalOpen(true);
@@ -174,26 +181,32 @@ export default function FaqManagement() {
             </tr>
           </thead>
           <tbody>
-            {visibleFaqs.length === 0 ? (
+            {faqs.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-5 py-14 text-center text-sm text-gray-500">
                   No FAQs yet.
                 </td>
               </tr>
             ) : (
-              visibleFaqs.map((faq) => (
+              faqs.map((faq) => (
                 <tr
                   key={faq.faq_id}
                   className="border-b border-gray-50 text-navy transition-colors last:border-0 hover:bg-gray-50/80"
                 >
                   <td className="px-5 py-3.5">{faq.question_text}</td>
                   <td className="px-5 py-3.5">
-                    <span className="rounded-full bg-navy/5 px-2.5 py-0.5 text-xs font-medium text-navy">
+                    <span className="whitespace-nowrap rounded-full bg-navy/5 px-2.5 py-0.5 text-xs font-medium text-navy">
                       {faq.category}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-sm text-gray-500">
-                    {faq.office_name ?? <span className="italic text-gray-400">Unassigned</span>}
+                  <td className="px-5 py-3.5 text-sm">
+                    {faq.office_name ? (
+                      <span className="whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                        {faq.office_name}
+                      </span>
+                    ) : (
+                      <span className="italic text-gray-400">Unassigned</span>
+                    )}
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center justify-end gap-3">
@@ -237,6 +250,7 @@ export default function FaqManagement() {
             )}
           </tbody>
         </table>
+        <Pagination page={page} count={totalCount} onPageChange={setPage} />
       </div>
 
       {isModalOpen && (

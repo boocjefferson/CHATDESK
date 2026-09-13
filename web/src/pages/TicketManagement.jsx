@@ -1,69 +1,102 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { getTickets, updateTicket } from "../api/tickets.js";
 import { getOffices } from "../api/offices.js";
 import TicketStatusBadge from "../components/TicketStatusBadge.jsx";
+import Pagination from "../components/Pagination.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
+
+const ESCALATED_PREFIX = /^Student asked: "(.*)" - AI could not resolve\.$/s;
+
+function displayIssue(issueDescription) {
+  const match = ESCALATED_PREFIX.exec(issueDescription);
+  return match ? match[1] : issueDescription;
+}
 
 export default function TicketManagement() {
   const { currentUser } = useAuth();
   const isOfficeAdmin = currentUser?.role === "office_admin";
   const [tickets, setTickets] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [allCount, setAllCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [resolvedCount, setResolvedCount] = useState(0);
   const [offices, setOffices] = useState([]);
+  const [knownCategories, setKnownCategories] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [officeFilter, setOfficeFilter] = useState("All");
-  const [sortDirection, setSortDirection] = useState("asc");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [page, setPage] = useState(1);
   const [expandedTicketId, setExpandedTicketId] = useState(null);
   const [answerDraft, setAnswerDraft] = useState("");
+  const [categoryDraft, setCategoryDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isAssigningOffice, setIsAssigningOffice] = useState(false);
 
   const loadTickets = () => {
     setIsLoading(true);
-    getTickets()
-      .then((res) => setTickets(res.data.results ?? res.data))
+    getTickets({
+      page,
+      search: debouncedSearch || undefined,
+      category: categoryFilter === "All" ? undefined : categoryFilter,
+      office: officeFilter === "All" || officeFilter === "Unassigned" ? undefined : officeFilter,
+      status: statusFilter === "All" ? undefined : statusFilter,
+    })
+      .then((res) => {
+        const rows = res.data.results ?? res.data;
+        setTickets(rows);
+        setTotalCount(res.data.count ?? rows.length);
+        setKnownCategories((prev) => {
+          const next = new Set(prev);
+          rows.forEach((t) => next.add(t.subject_category));
+          return next;
+        });
+      })
       .catch(() => setError("Could not load tickets."))
       .finally(() => setIsLoading(false));
   };
 
+  // Stat tiles reflect true totals regardless of the active search/category/
+  // office/status filters - office-admin scoping still applies server-side.
+  const loadCounts = () => {
+    Promise.all([
+      getTickets({ page: 1 }),
+      getTickets({ page: 1, status: "pending" }),
+      getTickets({ page: 1, status: "resolved" }),
+    ])
+      .then(([all, pending, resolved]) => {
+        setAllCount(all.data.count ?? (all.data.results ?? all.data).length);
+        setPendingCount(pending.data.count ?? (pending.data.results ?? pending.data).length);
+        setResolvedCount(resolved.data.count ?? (resolved.data.results ?? resolved.data).length);
+      })
+      .catch(() => {});
+  };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, statusFilter, categoryFilter, officeFilter]);
+
   useEffect(() => {
     loadTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, debouncedSearch, statusFilter, categoryFilter, officeFilter]);
+
+  useEffect(() => {
+    loadCounts();
     getOffices()
       .then((res) => setOffices(res.data.results ?? res.data))
       .catch(() => {});
   }, []);
-
-  const categories = useMemo(
-    () => Array.from(new Set(tickets.map((t) => t.subject_category))).sort(),
-    [tickets]
-  );
-
-  const pendingCount = useMemo(() => tickets.filter((t) => t.status === "pending").length, [tickets]);
-  const resolvedCount = useMemo(() => tickets.filter((t) => t.status === "resolved").length, [tickets]);
-
-  const visibleTickets = useMemo(() => {
-    const bySearch = search
-      ? tickets.filter((t) => t.issue_description.toLowerCase().includes(search.toLowerCase()))
-      : tickets;
-    const byCategory =
-      categoryFilter === "All"
-        ? bySearch
-        : bySearch.filter((t) => t.subject_category === categoryFilter);
-    const filtered =
-      officeFilter === "All"
-        ? byCategory
-        : officeFilter === "Unassigned"
-        ? byCategory.filter((t) => !t.office)
-        : byCategory.filter((t) => String(t.office) === officeFilter);
-    return [...filtered].sort((a, b) =>
-      sortDirection === "asc"
-        ? a.subject_category.localeCompare(b.subject_category)
-        : b.subject_category.localeCompare(a.subject_category)
-    );
-  }, [tickets, search, categoryFilter, officeFilter, sortDirection]);
 
   const handleToggleRow = (ticket) => {
     if (expandedTicketId === ticket.ticket_id) {
@@ -72,6 +105,7 @@ export default function TicketManagement() {
     }
     setExpandedTicketId(ticket.ticket_id);
     setAnswerDraft(ticket.resolution ?? "");
+    setCategoryDraft(ticket.subject_category);
   };
 
   const handleSendAnswer = async (ticketId) => {
@@ -79,13 +113,25 @@ export default function TicketManagement() {
     if (!trimmed || isSending) return;
     setIsSending(true);
     try {
-      await updateTicket(ticketId, { resolution: trimmed, status: "resolved" });
+      await updateTicket(ticketId, {
+        resolution: trimmed,
+        status: "resolved",
+        subject_category: categoryDraft.trim() || undefined,
+      });
       setExpandedTicketId(null);
       setAnswerDraft("");
       loadTickets();
+      loadCounts();
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handleUpdateCategory = async (ticketId) => {
+    const trimmed = categoryDraft.trim();
+    if (!trimmed) return;
+    await updateTicket(ticketId, { subject_category: trimmed });
+    loadTickets();
   };
 
   const handleAssignOffice = async (ticketId, officeId) => {
@@ -98,7 +144,11 @@ export default function TicketManagement() {
     }
   };
 
-  if (isLoading) return <LoadingState label="Loading tickets..." />;
+  const handleStatTileClick = (status) => {
+    setStatusFilter((prev) => (prev === status ? "All" : status));
+  };
+
+  if (isLoading && tickets.length === 0) return <LoadingState label="Loading tickets..." />;
   if (error) return <ErrorState message={error} />;
 
   return (
@@ -106,8 +156,10 @@ export default function TicketManagement() {
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile
           label="Total Tickets"
-          value={tickets.length}
+          value={allCount}
           accentClass="bg-navy/10 text-navy"
+          isActive={statusFilter === "All"}
+          onClick={() => handleStatTileClick("All")}
           icon={
             <path
               d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 0 0 6v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-6V7Z"
@@ -122,6 +174,8 @@ export default function TicketManagement() {
           label="Pending"
           value={pendingCount}
           accentClass="bg-status-pending/15 text-status-pending"
+          isActive={statusFilter === "pending"}
+          onClick={() => handleStatTileClick("pending")}
           icon={
             <path
               d="M12 8v4l3 3M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"
@@ -136,6 +190,8 @@ export default function TicketManagement() {
           label="Resolved"
           value={resolvedCount}
           accentClass="bg-status-resolved/15 text-status-resolved"
+          isActive={statusFilter === "resolved"}
+          onClick={() => handleStatTileClick("resolved")}
           icon={
             <path
               d="m20 6-11 11-5-5"
@@ -163,7 +219,7 @@ export default function TicketManagement() {
           className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
         >
           <option value="All">All Category</option>
-          {categories.map((category) => (
+          {[...knownCategories].sort().map((category) => (
             <option key={category} value={category}>
               {category}
             </option>
@@ -184,13 +240,6 @@ export default function TicketManagement() {
             ))}
           </select>
         )}
-        <button
-          type="button"
-          onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
-          className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy transition-colors hover:border-gold"
-        >
-          Sort: {sortDirection === "asc" ? "A-Z" : "Z-A"}
-        </button>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -205,20 +254,20 @@ export default function TicketManagement() {
             </tr>
           </thead>
           <tbody>
-            {visibleTickets.length === 0 ? (
+            {tickets.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-5 py-14 text-center text-sm text-gray-500">
                   No tickets yet.
                 </td>
               </tr>
             ) : (
-              visibleTickets.map((ticket) => (
+              tickets.map((ticket) => (
                 <Fragment key={ticket.ticket_id}>
                   <tr
                     onClick={() => handleToggleRow(ticket)}
                     className="cursor-pointer border-b border-gray-50 text-navy transition-colors last:border-0 hover:bg-gray-50/80"
                   >
-                    <td className="max-w-md px-5 py-3.5 truncate">{ticket.issue_description}</td>
+                    <td className="max-w-md px-5 py-3.5 truncate">{displayIssue(ticket.issue_description)}</td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2.5">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-xs font-bold text-navy">
@@ -228,8 +277,14 @@ export default function TicketManagement() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-gray-500">{ticket.subject_category}</td>
-                    <td className="px-5 py-3.5 text-sm text-gray-500">
-                      {ticket.office_name ?? <span className="italic text-gray-400">Unassigned</span>}
+                    <td className="px-5 py-3.5 text-sm">
+                      {ticket.office_name ? (
+                        <span className="whitespace-nowrap rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
+                          {ticket.office_name}
+                        </span>
+                      ) : (
+                        <span className="italic text-gray-400">Unassigned</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <TicketStatusBadge status={ticket.status} />
@@ -238,27 +293,39 @@ export default function TicketManagement() {
                   {expandedTicketId === ticket.ticket_id && (
                     <tr className="border-b border-gray-50 bg-gray-50/60">
                       <td colSpan={5} className="px-5 py-3">
-                        {!isOfficeAdmin && (
-                          <div
-                            className="mb-3 flex items-center gap-3"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <label className="text-sm font-medium text-gray-600">Route to office:</label>
-                            <select
-                              value={ticket.office ?? ""}
-                              disabled={isAssigningOffice}
-                              onChange={(e) => handleAssignOffice(ticket.ticket_id, e.target.value)}
-                              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40 disabled:opacity-50"
-                            >
-                              <option value="">Unassigned</option>
-                              {offices.map((o) => (
-                                <option key={o.office_id} value={o.office_id}>
-                                  {o.name}
-                                </option>
-                              ))}
-                            </select>
+                        <div
+                          className="mb-3 flex flex-wrap items-center gap-4"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-600">Category:</label>
+                            <input
+                              type="text"
+                              value={categoryDraft}
+                              onChange={(e) => setCategoryDraft(e.target.value)}
+                              onBlur={() => handleUpdateCategory(ticket.ticket_id)}
+                              className="w-48 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
+                            />
                           </div>
-                        )}
+                          {!isOfficeAdmin && (
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium text-gray-600">Route to office:</label>
+                              <select
+                                value={ticket.office ?? ""}
+                                disabled={isAssigningOffice}
+                                onChange={(e) => handleAssignOffice(ticket.ticket_id, e.target.value)}
+                                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40 disabled:opacity-50"
+                              >
+                                <option value="">Unassigned</option>
+                                {offices.map((o) => (
+                                  <option key={o.office_id} value={o.office_id}>
+                                    {o.name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
                         <div
                           className="flex items-end gap-3"
                           onClick={(e) => e.stopPropagation()}
@@ -296,14 +363,21 @@ export default function TicketManagement() {
             )}
           </tbody>
         </table>
+        <Pagination page={page} count={totalCount} onPageChange={setPage} />
       </div>
     </section>
   );
 }
 
-function StatTile({ label, value, icon, accentClass }) {
+function StatTile({ label, value, icon, accentClass, isActive, onClick }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-2xl border bg-white p-5 text-left shadow-sm transition-all ${
+        isActive ? "border-gold ring-2 ring-gold/30" : "border-gray-200 hover:border-gold/50"
+      }`}
+    >
       <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl ${accentClass}`}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           {icon}
@@ -311,6 +385,6 @@ function StatTile({ label, value, icon, accentClass }) {
       </div>
       <p className="text-sm text-gray-500">{label}</p>
       <p className="mt-1 text-3xl font-bold tabular-nums text-navy">{value}</p>
-    </div>
+    </button>
   );
 }

@@ -1,4 +1,4 @@
-from django.db.models import Count
+from django.db.models import Count, Q
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -9,10 +9,10 @@ from users.permissions import IsOfficeStaff
 
 class AnalyticsOverviewView(APIView):
     """GET /api/v1/analytics/overview/ - superadmin or office_admin.
-    Office Admins see only their own office's slice (tickets assigned to
-    their office, and inquiry logs that escalated into one of those
-    tickets - logs the chatbot resolved on its own were never routed to any
-    office, so they aren't attributable to one).
+    Office Admins see only their own office's slice: tickets assigned to
+    their office, and inquiry logs either tagged with their office (picked
+    via the mobile category selector) or that escalated into one of those
+    tickets. A log with neither isn't attributable to any one office.
     Optional ?date_from=YYYY-MM-DD&date_to=YYYY-MM-DD to scope the range."""
 
     permission_classes = [IsOfficeStaff]
@@ -22,7 +22,7 @@ class AnalyticsOverviewView(APIView):
         logs = InquiryLog.objects.all()
         tickets_base = Ticket.objects.all()
         if user.role == user.Role.OFFICE_ADMIN:
-            logs = logs.filter(ticket__office=user.office)
+            logs = logs.filter(Q(office=user.office) | Q(ticket__office=user.office)).distinct()
             tickets_base = tickets_base.filter(office=user.office)
 
         date_from = request.query_params.get("date_from")

@@ -7,6 +7,13 @@ class InquiryLog(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="inquiry_logs"
     )
+    # Which office/category the student selected before asking - independent
+    # of whether the inquiry ended up escalated to a ticket. Lets Office
+    # Admins see their office's full inquiry volume, not just escalations.
+    office = models.ForeignKey(
+        "offices.Office", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="inquiry_logs",
+    )
     user_message = models.TextField()
     detected_intent = models.CharField(max_length=100)
     chatbot_response = models.TextField()

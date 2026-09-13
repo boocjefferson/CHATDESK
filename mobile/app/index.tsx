@@ -4,8 +4,10 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -42,8 +44,9 @@ export default function StudentChatScreen() {
   const { currentUser, logout } = useAuth();
   const { colors, isDark } = useTheme();
   const styles = createStyles(colors);
-  const { messages, isSending, sendMessage } = useChat();
+  const { messages, isSending, sendMessage, offices, selectedOffice, setSelectedOffice } = useChat();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [phase, setPhase] = useState<Phase | null>(null);
   const [isPhaseBannerDismissed, setIsPhaseBannerDismissed] = useState(false);
@@ -98,6 +101,51 @@ export default function StudentChatScreen() {
             )}
           </Pressable>
         </View>
+
+        <Pressable
+          style={({ pressed }) => [styles.categoryChip, pressed && styles.categoryChipPressed]}
+          onPress={() => setIsCategoryPickerOpen(true)}
+        >
+          <MaterialIcons name="apartment" size={16} color={colors.accentText} />
+          <Text style={styles.categoryChipText} numberOfLines={1}>
+            {selectedOffice ? selectedOffice.name : "Choose a category (optional)"}
+          </Text>
+          <MaterialIcons name="expand-more" size={18} color={colors.textMuted} />
+        </Pressable>
+
+        <Modal
+          visible={isCategoryPickerOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setIsCategoryPickerOpen(false)}
+        >
+          <Pressable style={styles.categoryModalBackdrop} onPress={() => setIsCategoryPickerOpen(false)}>
+            <View style={styles.categoryModalSheet}>
+              <Text style={styles.categoryModalHeading}>Ask about which office?</Text>
+              <FlatList
+                data={[{ office_id: null as number | null, name: "General / Not sure" }, ...offices]}
+                keyExtractor={(option) => String(option.office_id)}
+                renderItem={({ item }) => {
+                  const isSelected = item.office_id === (selectedOffice?.office_id ?? null);
+                  return (
+                    <Pressable
+                      style={styles.categoryModalOption}
+                      onPress={() => {
+                        setSelectedOffice(item.office_id === null ? null : { office_id: item.office_id, name: item.name });
+                        setIsCategoryPickerOpen(false);
+                      }}
+                    >
+                      <Text style={[styles.categoryModalOptionText, isSelected && styles.categoryModalOptionTextSelected]}>
+                        {item.name}
+                      </Text>
+                      {isSelected ? <MaterialIcons name="check" size={18} color={colors.gold} /> : null}
+                    </Pressable>
+                  );
+                }}
+              />
+            </View>
+          </Pressable>
+        </Modal>
 
         {hasActivePhase && !isPhaseBannerDismissed && phase ? (
           <View style={styles.phaseBanner}>
@@ -250,6 +298,69 @@ const createStyles = (colors: ThemePalette) =>
     },
     avatarImage: { width: 30, height: 30 },
     avatarText: { fontFamily: "Montserrat_700Bold", color: colors.accentText, fontSize: 12 },
+    categoryChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginHorizontal: 20,
+      marginBottom: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 12,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.06,
+      shadowRadius: 3,
+      elevation: 1,
+    },
+    categoryChipPressed: { opacity: 0.7 },
+    categoryChipText: {
+      flex: 1,
+      fontFamily: "Montserrat_400Regular",
+      fontSize: 13,
+      color: colors.textPrimary,
+    },
+    categoryModalBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.4)",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+    },
+    categoryModalSheet: {
+      maxHeight: 420,
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      paddingTop: 16,
+      paddingBottom: 8,
+    },
+    categoryModalHeading: {
+      fontFamily: "Montserrat_700Bold",
+      fontSize: 14,
+      color: colors.textSecondary,
+      paddingHorizontal: 20,
+      paddingBottom: 8,
+    },
+    categoryModalOption: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      borderTopWidth: 1,
+      borderTopColor: colors.border,
+    },
+    categoryModalOptionText: {
+      fontSize: 15,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textPrimary,
+    },
+    categoryModalOptionTextSelected: {
+      fontFamily: "Montserrat_700Bold",
+      color: colors.accentText,
+    },
     phaseBanner: {
       flexDirection: "row",
       alignItems: "flex-start",
