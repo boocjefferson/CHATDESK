@@ -19,6 +19,13 @@ class Faq(models.Model):
     question_text = models.TextField()
     answer_content = models.TextField()
     category = models.CharField(max_length=20, choices=Category.choices)
+    # Which office/college owns this FAQ (OSA, Registrar, a specific college,
+    # etc), separate from `category` which is a topical tag. Nullable since
+    # existing FAQs predate this field and routing is an admin follow-up task.
+    office = models.ForeignKey(
+        "offices.Office", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="faqs",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(

@@ -96,6 +96,19 @@ const navItems = [
     ),
   },
   {
+    label: "Offices",
+    to: "/offices",
+    icon: (
+      <path
+        d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1m4 0h1m-6 4h1m4 0h1m-6 4h1m4 0h1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    ),
+  },
+  {
     label: "Settings",
     to: "/settings",
     icon: (

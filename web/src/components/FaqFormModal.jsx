@@ -2,11 +2,12 @@ import { useState } from "react";
 
 export const CATEGORIES = ["Enrollment", "Scholarship", "Clearance", "Discipline", "General"];
 
-export default function FaqFormModal({ initialFaq, onSave, onClose }) {
+export default function FaqFormModal({ initialFaq, offices, onSave, onClose }) {
   const [intentKeyword, setIntentKeyword] = useState(initialFaq?.intent_keyword ?? "");
   const [questionText, setQuestionText] = useState(initialFaq?.question_text ?? "");
   const [answerContent, setAnswerContent] = useState(initialFaq?.answer_content ?? "");
   const [category, setCategory] = useState(initialFaq?.category ?? CATEGORIES[0]);
+  const [office, setOffice] = useState(initialFaq?.office ?? "");
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -18,6 +19,7 @@ export default function FaqFormModal({ initialFaq, onSave, onClose }) {
         question_text: questionText,
         answer_content: answerContent,
         category,
+        office: office || null,
       });
       onClose();
     } finally {
@@ -64,10 +66,22 @@ export default function FaqFormModal({ initialFaq, onSave, onClose }) {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gold/40"
+          className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gold/40"
         >
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+
+        <label className="mb-1 block text-sm text-gray-600">Office / College</label>
+        <select
+          value={office}
+          onChange={(e) => setOffice(e.target.value)}
+          className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gold/40"
+        >
+          <option value="">Unassigned</option>
+          {(offices ?? []).map((o) => (
+            <option key={o.office_id} value={o.office_id}>{o.name}</option>
           ))}
         </select>
 

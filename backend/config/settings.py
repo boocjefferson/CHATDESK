@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "analytics",
     "announcements",
     "phases",
+    "offices",
 ]
 
 MIDDLEWARE = [
@@ -127,10 +128,11 @@ CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", default="", cast=Csv())
 
 OPENAI_API_KEY = config("OPENAI_API_KEY")
 
-# Gmail SMTP - used to email the mobile "Forgot Password" reset code
-# (users/views.py PasswordResetRequestView). Needs a Gmail App Password,
-# not the account's normal login password - generate one at
-# https://myaccount.google.com/apppasswords with 2-Step Verification on.
+# Gmail SMTP - used to email the "Forgot Password" reset code and the
+# registration email-verification link (users/views.py, users/services.py).
+# Needs a Gmail App Password, not the account's normal login password -
+# generate one at https://myaccount.google.com/apppasswords with 2-Step
+# Verification on.
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
@@ -139,9 +141,9 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER)
 
-# True once a real Gmail App Password is in place. Until then,
-# PasswordResetRequestView falls back to returning the code directly in the
-# API response (dev_code) instead of emailing it - see users/views.py.
-PASSWORD_RESET_EMAIL_ENABLED = bool(
+# True once a real Gmail App Password is in place. Until then, both the
+# password-reset and email-verification flows fall back to returning their
+# code/link directly in the API response instead of emailing it.
+REAL_EMAIL_ENABLED = bool(
     EMAIL_HOST_PASSWORD and EMAIL_HOST_PASSWORD != "replace-with-gmail-app-password"
 )

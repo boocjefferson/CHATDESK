@@ -9,12 +9,13 @@ const PAGE_META = {
   "/logs": { title: "Inquiry Logs", subtitle: "Raw chatbot conversation history" },
   "/announcements": { title: "Announcements", subtitle: "Broadcast updates to all students" },
   "/phases": { title: "Phases", subtitle: "Manage USTP calendar phases and student guidance" },
-  "/settings": { title: "Settings", subtitle: "Manage your admin account" },
+  "/offices": { title: "Offices", subtitle: "Manage offices and colleges for routing FAQs and tickets" },
+  "/settings": { title: "Settings", subtitle: "Manage your Super Admin account" },
 };
 
 export default function AdminDashboardLayout() {
   const { pathname } = useLocation();
-  const meta = PAGE_META[pathname] ?? { title: "Admin Dashboard", subtitle: "" };
+  const meta = PAGE_META[pathname] ?? { title: "Super Admin Dashboard", subtitle: "" };
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 text-navy">

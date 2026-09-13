@@ -24,6 +24,13 @@ class Ticket(models.Model):
         InquiryLog, on_delete=models.CASCADE, null=True, blank=True, related_name="ticket"
     )
     subject_category = models.CharField(max_length=100)
+    # Which office/college is responsible for resolving this ticket. Null on
+    # creation (AI escalation has no way to know the right office), routed
+    # by Super Admin afterward through PATCH.
+    office = models.ForeignKey(
+        "offices.Office", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="tickets",
+    )
     issue_description = models.TextField()
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     resolution = models.TextField(null=True, blank=True)

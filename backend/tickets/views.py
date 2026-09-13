@@ -13,7 +13,7 @@ from .serializers import TicketCreateSerializer, TicketSerializer, TicketUpdateS
 
 class TicketListCreateView(generics.ListCreateAPIView):
     """
-    GET  /api/v1/tickets/ - admin: all tickets (?status=, ?category= filters).
+    GET  /api/v1/tickets/ - admin: all tickets (?status=, ?category=, ?office= filters).
                             student: own tickets only.
     POST /api/v1/tickets/ - student only, manual creation bypassing the AI.
     """
@@ -22,13 +22,16 @@ class TicketListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         qs = Ticket.objects.all()
 
-        if user.role == user.Role.ADMIN:
+        if user.role == user.Role.SUPERADMIN:
             status_param = self.request.query_params.get("status")
             category_param = self.request.query_params.get("category")
+            office_param = self.request.query_params.get("office")
             if status_param:
                 qs = qs.filter(status=status_param)
             if category_param:
                 qs = qs.filter(subject_category=category_param)
+            if office_param:
+                qs = qs.filter(office_id=office_param)
             return qs
 
         # Students always see only their own tickets - ownership is enforced
@@ -60,7 +63,7 @@ class TicketDetailView(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if user.role == user.Role.ADMIN:
+        if user.role == user.Role.SUPERADMIN:
             return Ticket.objects.all()
         return Ticket.objects.filter(user=user)
 

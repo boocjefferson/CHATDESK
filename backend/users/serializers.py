@@ -5,6 +5,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User
+from .services import send_verification_email
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -23,6 +24,7 @@ class UserSerializer(serializers.ModelSerializer):
             "course",
             "school_id",
             "is_active",
+            "is_email_verified",
             "last_login",
             "created_at",
         ]
@@ -62,14 +64,26 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         validated_data["role"] = User.Role.STUDENT
+        validated_data["is_email_verified"] = False
         password = validated_data.pop("password")
         user = User(**validated_data)
         user.set_password(password)
         user.save()
+
+        request = self.context.get("request")
+        # Dev-only: no real Gmail App Password configured yet, so the link
+        # can't actually be emailed - stash it to surface in the response
+        # instead (dev_verify_url), same pattern as the password-reset flow.
+        dev_verify_url = send_verification_email(user, request)
+        user._dev_verify_url = dev_verify_url
         return user
 
     def to_representation(self, instance):
-        return {"user": UserSerializer(instance).data, **_tokens_for_user(instance)}
+        data = {"user": UserSerializer(instance).data, **_tokens_for_user(instance)}
+        dev_verify_url = getattr(instance, "_dev_verify_url", None)
+        if dev_verify_url:
+            data["dev_verify_url"] = dev_verify_url
+        return data
 
 
 class LoginSerializer(serializers.Serializer):
@@ -178,7 +192,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         password = validated_data.pop("password")
-        if validated_data.get("role") == User.Role.ADMIN:
+        if validated_data.get("role") == User.Role.SUPERADMIN:
             validated_data["is_staff"] = True
             validated_data["is_superuser"] = True
         user = User(**validated_data)

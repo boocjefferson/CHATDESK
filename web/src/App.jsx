@@ -11,6 +11,7 @@ import UserManagement from "./pages/UserManagement.jsx";
 import InquiryLogs from "./pages/InquiryLogs.jsx";
 import AnnouncementManagement from "./pages/AnnouncementManagement.jsx";
 import PhaseManagement from "./pages/PhaseManagement.jsx";
+import OfficeManagement from "./pages/OfficeManagement.jsx";
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
         <Route path="logs" element={<InquiryLogs />} />
         <Route path="announcements" element={<AnnouncementManagement />} />
         <Route path="phases" element={<PhaseManagement />} />
+        <Route path="offices" element={<OfficeManagement />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
 

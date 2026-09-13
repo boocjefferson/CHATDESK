@@ -10,8 +10,11 @@ class IsStudent(BasePermission):
 
 
 class IsAdmin(BasePermission):
+    """Named IsAdmin for historical reasons - actually gates on the
+    Super Admin role, the only privileged web-dashboard tier."""
+
     def has_permission(self, request, view):
         return bool(
             request.user and request.user.is_authenticated
-            and request.user.role == request.user.Role.ADMIN
+            and request.user.role == request.user.Role.SUPERADMIN
         )

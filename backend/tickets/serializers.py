@@ -1,19 +1,26 @@
 from rest_framework import serializers
 
+from offices.models import Office
+
 from .models import Ticket
 
 
 class TicketSerializer(serializers.ModelSerializer):
     user_id = serializers.PrimaryKeyRelatedField(source="user", read_only=True)
     log_id = serializers.PrimaryKeyRelatedField(source="log", read_only=True)
+    office_name = serializers.CharField(source="office.name", read_only=True, default=None)
 
     class Meta:
         model = Ticket
         fields = [
             "ticket_id", "user_id", "resolved_by", "log_id", "subject_category",
-            "issue_description", "status", "resolution", "created_at", "resolved_at",
+            "office", "office_name", "issue_description", "status", "resolution",
+            "created_at", "resolved_at",
         ]
-        read_only_fields = ["ticket_id", "user_id", "log_id", "resolved_by", "created_at", "resolved_at"]
+        read_only_fields = [
+            "ticket_id", "user_id", "log_id", "resolved_by", "office_name",
+            "created_at", "resolved_at",
+        ]
 
 
 class TicketCreateSerializer(serializers.ModelSerializer):
@@ -29,10 +36,14 @@ class TicketCreateSerializer(serializers.ModelSerializer):
 
 
 class TicketUpdateSerializer(serializers.ModelSerializer):
-    """PATCH /api/v1/tickets/{id}/ - admin only. Status and resolution text;
-    resolved_by and resolved_at are set server-side in the view, not accepted
-    as input."""
+    """PATCH /api/v1/tickets/{id}/ - admin only. Status, resolution text, and
+    which office is responsible (routing); resolved_by and resolved_at are
+    set server-side in the view, not accepted as input."""
+
+    office = serializers.PrimaryKeyRelatedField(
+        queryset=Office.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = Ticket
-        fields = ["status", "resolution"]
+        fields = ["status", "resolution", "office"]

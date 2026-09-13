@@ -7,9 +7,10 @@ export type ChatDeskUser = {
   email: string;
   first_name: string;
   last_name: string;
-  role: "student" | "admin";
+  role: "student" | "superadmin";
   course: string | null;
   school_id: string | null;
+  is_email_verified: boolean;
   created_at: string;
 };
 

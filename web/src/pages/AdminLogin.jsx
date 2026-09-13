@@ -17,7 +17,7 @@ export default function AdminLogin() {
     setIsSubmitting(true);
     try {
       const user = await login(email, password);
-      if (user.role !== "admin") {
+      if (user.role !== "superadmin") {
         setErrorMessage("This account is not authorized to access the admin dashboard.");
         return;
       }

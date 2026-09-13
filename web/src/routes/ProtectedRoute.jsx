@@ -12,7 +12,7 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  if (!currentUser || currentUser.role !== "admin") {
+  if (!currentUser || currentUser.role !== "superadmin") {
     return <Navigate to="/login" replace />;
   }
 

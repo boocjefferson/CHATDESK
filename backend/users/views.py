@@ -5,6 +5,8 @@ from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.core.mail import send_mail
 from django.db.models import Q
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import PermissionDenied
@@ -13,7 +15,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import PasswordResetCode, User
+from .models import EmailVerificationToken, PasswordResetCode, User
 from .permissions import IsAdmin
 from .serializers import (
     LoginSerializer,
@@ -132,7 +134,7 @@ class PasswordResetRequestView(APIView):
                     code_hash=make_password(raw_code),
                     expires_at=timezone.now() + RESET_CODE_LIFETIME,
                 )
-                if settings.PASSWORD_RESET_EMAIL_ENABLED:
+                if settings.REAL_EMAIL_ENABLED:
                     send_mail(
                         subject="ChatDesk password reset code",
                         message=(
@@ -149,7 +151,7 @@ class PasswordResetRequestView(APIView):
                     # configured yet (backend/.env EMAIL_HOST_PASSWORD), so
                     # the code can't actually be emailed. Return it directly
                     # instead of failing the request. Remove dev_code once
-                    # PASSWORD_RESET_EMAIL_ENABLED is true for real.
+                    # REAL_EMAIL_ENABLED is true for real.
                     response_data["dev_code"] = raw_code
 
         return Response(response_data, status=status.HTTP_200_OK)
@@ -201,6 +203,69 @@ class PasswordResetConfirmView(APIView):
         return Response(
             {"message": "Password has been reset. You can now log in."},
             status=status.HTTP_200_OK,
+        )
+
+
+def _verify_email_page(title, message, ok):
+    color = "#16A34A" if ok else "#DC2626"
+    return HttpResponse(
+        f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{title}</title>
+<style>
+  body {{ font-family: -apple-system, system-ui, sans-serif; background: #F9FAFB; display: flex;
+         align-items: center; justify-content: center; min-height: 100vh; margin: 0; }}
+  .card {{ background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+           padding: 40px; max-width: 400px; text-align: center; }}
+  h1 {{ color: {color}; font-size: 20px; margin: 0 0 8px; }}
+  p {{ color: #6B7280; font-size: 14px; margin: 0; }}
+</style></head>
+<body><div class="card"><h1>{title}</h1><p>{message}</p></div></body></html>""",
+        content_type="text/html",
+        status=200 if ok else 400,
+    )
+
+
+class VerifyEmailView(APIView):
+    """GET /api/v1/auth/verify-email/{user_id}/{token}/ - public. The link
+    a student clicks from their registration email. Renders a plain HTML
+    confirmation page directly - no frontend/deep-link involved, since this
+    is opened from a browser or email client, not necessarily the app."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, user_id, token):
+        user = get_object_or_404(User, pk=user_id)
+
+        if user.is_email_verified:
+            return _verify_email_page(
+                "Already verified", "This email address has already been verified. You can log in.", True
+            )
+
+        matching_token = next(
+            (
+                t
+                for t in user.email_verification_tokens.filter(
+                    is_used=False, expires_at__gt=timezone.now()
+                ).order_by("-created_at")
+                if check_password(token, t.token_hash)
+            ),
+            None,
+        )
+        if not matching_token:
+            return _verify_email_page(
+                "Link expired or invalid",
+                "This verification link is invalid or has expired. Please request a new one.",
+                False,
+            )
+
+        user.is_email_verified = True
+        user.save(update_fields=["is_email_verified"])
+        matching_token.is_used = True
+        matching_token.save(update_fields=["is_used"])
+
+        return _verify_email_page(
+            "Email verified", "Your email address has been verified. You can now log in.", True
         )
 
 
@@ -267,7 +332,7 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
             if serializer.validated_data.get("is_active") is False:
                 raise PermissionDenied("You can't deactivate your own account.")
             new_role = serializer.validated_data.get("role")
-            if new_role and new_role != User.Role.ADMIN:
+            if new_role and new_role != User.Role.SUPERADMIN:
                 raise PermissionDenied("You can't change your own role.")
         serializer.save()
 

@@ -32,7 +32,9 @@ export default function AdminSettings() {
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <p className="text-sm text-gray-500">Signed in as</p>
         <p className="font-medium text-navy">{currentUser?.email}</p>
-        <p className="text-sm text-gray-500">Role: {currentUser?.role}</p>
+        <p className="text-sm text-gray-500">
+          Role: {currentUser?.role === "superadmin" ? "Super Admin" : currentUser?.role}
+        </p>
       </div>
 
       <form

@@ -1,18 +1,22 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { getTickets, updateTicket } from "../api/tickets.js";
+import { getOffices } from "../api/offices.js";
 import TicketStatusBadge from "../components/TicketStatusBadge.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 
 export default function TicketManagement() {
   const [tickets, setTickets] = useState([]);
+  const [offices, setOffices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [officeFilter, setOfficeFilter] = useState("All");
   const [sortDirection, setSortDirection] = useState("asc");
   const [expandedTicketId, setExpandedTicketId] = useState(null);
   const [answerDraft, setAnswerDraft] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [isAssigningOffice, setIsAssigningOffice] = useState(false);
 
   const loadTickets = () => {
     setIsLoading(true);
@@ -24,6 +28,9 @@ export default function TicketManagement() {
 
   useEffect(() => {
     loadTickets();
+    getOffices()
+      .then((res) => setOffices(res.data.results ?? res.data))
+      .catch(() => {});
   }, []);
 
   const categories = useMemo(
@@ -38,16 +45,22 @@ export default function TicketManagement() {
     const bySearch = search
       ? tickets.filter((t) => t.issue_description.toLowerCase().includes(search.toLowerCase()))
       : tickets;
-    const filtered =
+    const byCategory =
       categoryFilter === "All"
         ? bySearch
         : bySearch.filter((t) => t.subject_category === categoryFilter);
+    const filtered =
+      officeFilter === "All"
+        ? byCategory
+        : officeFilter === "Unassigned"
+        ? byCategory.filter((t) => !t.office)
+        : byCategory.filter((t) => String(t.office) === officeFilter);
     return [...filtered].sort((a, b) =>
       sortDirection === "asc"
         ? a.subject_category.localeCompare(b.subject_category)
         : b.subject_category.localeCompare(a.subject_category)
     );
-  }, [tickets, search, categoryFilter, sortDirection]);
+  }, [tickets, search, categoryFilter, officeFilter, sortDirection]);
 
   const handleToggleRow = (ticket) => {
     if (expandedTicketId === ticket.ticket_id) {
@@ -69,6 +82,16 @@ export default function TicketManagement() {
       loadTickets();
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleAssignOffice = async (ticketId, officeId) => {
+    setIsAssigningOffice(true);
+    try {
+      await updateTicket(ticketId, { office: officeId || null });
+      loadTickets();
+    } finally {
+      setIsAssigningOffice(false);
     }
   };
 
@@ -143,6 +166,19 @@ export default function TicketManagement() {
             </option>
           ))}
         </select>
+        <select
+          value={officeFilter}
+          onChange={(e) => setOfficeFilter(e.target.value)}
+          className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
+        >
+          <option value="All">All Offices</option>
+          <option value="Unassigned">Unassigned</option>
+          {offices.map((o) => (
+            <option key={o.office_id} value={String(o.office_id)}>
+              {o.name}
+            </option>
+          ))}
+        </select>
         <button
           type="button"
           onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
@@ -159,13 +195,14 @@ export default function TicketManagement() {
               <th className="px-5 py-3">Question</th>
               <th className="px-5 py-3">From</th>
               <th className="px-5 py-3">Category</th>
+              <th className="px-5 py-3">Office</th>
               <th className="px-5 py-3 text-right">Status</th>
             </tr>
           </thead>
           <tbody>
             {visibleTickets.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-5 py-14 text-center text-sm text-gray-500">
+                <td colSpan={5} className="px-5 py-14 text-center text-sm text-gray-500">
                   No tickets yet.
                 </td>
               </tr>
@@ -186,13 +223,35 @@ export default function TicketManagement() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-gray-500">{ticket.subject_category}</td>
+                    <td className="px-5 py-3.5 text-sm text-gray-500">
+                      {ticket.office_name ?? <span className="italic text-gray-400">Unassigned</span>}
+                    </td>
                     <td className="px-5 py-3.5 text-right">
                       <TicketStatusBadge status={ticket.status} />
                     </td>
                   </tr>
                   {expandedTicketId === ticket.ticket_id && (
                     <tr className="border-b border-gray-50 bg-gray-50/60">
-                      <td colSpan={4} className="px-5 py-3">
+                      <td colSpan={5} className="px-5 py-3">
+                        <div
+                          className="mb-3 flex items-center gap-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <label className="text-sm font-medium text-gray-600">Route to office:</label>
+                          <select
+                            value={ticket.office ?? ""}
+                            disabled={isAssigningOffice}
+                            onChange={(e) => handleAssignOffice(ticket.ticket_id, e.target.value)}
+                            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40 disabled:opacity-50"
+                          >
+                            <option value="">Unassigned</option>
+                            {offices.map((o) => (
+                              <option key={o.office_id} value={o.office_id}>
+                                {o.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                         <div
                           className="flex items-end gap-3"
                           onClick={(e) => e.stopPropagation()}

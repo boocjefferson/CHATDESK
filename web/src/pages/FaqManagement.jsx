@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFaq, deleteFaq, getFaqs, updateFaq } from "../api/faqs.js";
+import { getOffices } from "../api/offices.js";
 import FaqFormModal, { CATEGORIES } from "../components/FaqFormModal.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 
 export default function FaqManagement() {
   const [faqs, setFaqs] = useState([]);
+  const [offices, setOffices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState(null);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [officeFilter, setOfficeFilter] = useState("All");
   const [sortDirection, setSortDirection] = useState("asc");
 
   const loadFaqs = () => {
@@ -23,6 +26,9 @@ export default function FaqManagement() {
 
   useEffect(() => {
     loadFaqs();
+    getOffices()
+      .then((res) => setOffices(res.data.results ?? res.data))
+      .catch(() => {});
   }, []);
 
   const categoriesInUse = useMemo(
@@ -34,14 +40,20 @@ export default function FaqManagement() {
     const bySearch = search
       ? faqs.filter((f) => f.question_text.toLowerCase().includes(search.toLowerCase()))
       : faqs;
-    const filtered =
+    const byCategory =
       categoryFilter === "All" ? bySearch : bySearch.filter((f) => f.category === categoryFilter);
+    const filtered =
+      officeFilter === "All"
+        ? byCategory
+        : officeFilter === "Unassigned"
+        ? byCategory.filter((f) => !f.office)
+        : byCategory.filter((f) => String(f.office) === officeFilter);
     return [...filtered].sort((a, b) =>
       sortDirection === "asc"
         ? a.question_text.localeCompare(b.question_text)
         : b.question_text.localeCompare(a.question_text)
     );
-  }, [faqs, search, categoryFilter, sortDirection]);
+  }, [faqs, search, categoryFilter, officeFilter, sortDirection]);
 
   const handleDelete = async (faqId) => {
     if (!window.confirm("Delete this FAQ?")) return;
@@ -114,6 +126,19 @@ export default function FaqManagement() {
             </option>
           ))}
         </select>
+        <select
+          value={officeFilter}
+          onChange={(e) => setOfficeFilter(e.target.value)}
+          className="rounded-full border border-gray-200 px-3 py-1.5 text-sm text-navy focus:outline-none focus:ring-2 focus:ring-gold/40"
+        >
+          <option value="All">All Offices</option>
+          <option value="Unassigned">Unassigned</option>
+          {offices.map((o) => (
+            <option key={o.office_id} value={String(o.office_id)}>
+              {o.name}
+            </option>
+          ))}
+        </select>
         <button
           type="button"
           onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}
@@ -139,13 +164,14 @@ export default function FaqManagement() {
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
               <th className="px-5 py-3">Question</th>
               <th className="px-5 py-3">Category</th>
+              <th className="px-5 py-3">Office</th>
               <th className="px-5 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {visibleFaqs.length === 0 ? (
               <tr>
-                <td colSpan={3} className="px-5 py-14 text-center text-sm text-gray-500">
+                <td colSpan={4} className="px-5 py-14 text-center text-sm text-gray-500">
                   No FAQs yet.
                 </td>
               </tr>
@@ -160,6 +186,9 @@ export default function FaqManagement() {
                     <span className="rounded-full bg-navy/5 px-2.5 py-0.5 text-xs font-medium text-navy">
                       {faq.category}
                     </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-sm text-gray-500">
+                    {faq.office_name ?? <span className="italic text-gray-400">Unassigned</span>}
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center justify-end gap-3">
@@ -208,6 +237,7 @@ export default function FaqManagement() {
       {isModalOpen && (
         <FaqFormModal
           initialFaq={editingFaq}
+          offices={offices}
           onSave={handleSave}
           onClose={() => setIsModalOpen(false)}
         />

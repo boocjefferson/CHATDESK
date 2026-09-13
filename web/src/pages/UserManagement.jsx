@@ -124,7 +124,7 @@ export default function UserManagement() {
         >
           <option value="All">All Roles</option>
           <option value="student">Student</option>
-          <option value="admin">Admin</option>
+          <option value="superadmin">Super Admin</option>
         </select>
         <select
           value={statusFilter}
@@ -176,7 +176,7 @@ export default function UserManagement() {
             ) : (
               visibleUsers.map((user) => {
                 const isSelf = user.user_id === currentUser?.user_id;
-                const isAdmin = user.role === "admin";
+                const isAdmin = user.role === "superadmin";
                 return (
                   <tr
                     key={user.user_id}

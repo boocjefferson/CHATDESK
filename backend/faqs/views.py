@@ -11,8 +11,11 @@ class FaqListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         qs = Faq.objects.all().order_by("-created_at")
         category = self.request.query_params.get("category")
+        office = self.request.query_params.get("office")
         if category:
             qs = qs.filter(category=category)
+        if office:
+            qs = qs.filter(office_id=office)
         return qs
 
     def perform_create(self, serializer):
