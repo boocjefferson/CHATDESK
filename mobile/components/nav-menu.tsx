@@ -28,11 +28,12 @@ import { useChat } from "../context/ChatContext";
 import { useTheme } from "../context/ThemeContext";
 import { colors as brandColors, type ThemePalette } from "../theme/colors";
 
+// Tickets and Announcements moved to the bottom tab bar - listing them here
+// too would just be a second path to the same screen. This menu now holds
+// only what doesn't have a permanent tab slot.
 const MENU_ITEMS: { label: string; icon: keyof typeof MaterialIcons.glyphMap }[] = [
   { label: "Start Chat", icon: "chat-bubble-outline" },
   { label: "Settings", icon: "settings" },
-  { label: "View Tickets", icon: "confirmation-number" },
-  { label: "Announcements", icon: "campaign" },
   { label: "More", icon: "more-horiz" },
 ];
 
@@ -97,21 +98,12 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
     if (label === "Start Chat") {
       startNewChat();
       onClose();
+      router.push("/");
       return;
     }
     if (label === "Settings") {
       onClose();
       router.push("/settings");
-      return;
-    }
-    if (label === "View Tickets") {
-      onClose();
-      router.push("/tickets");
-      return;
-    }
-    if (label === "Announcements") {
-      onClose();
-      router.push("/announcements");
       return;
     }
     if (label === "More") {
@@ -160,7 +152,12 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
       <Animated.View style={[styles.panel, { width: panelWidth }, panelStyle]}>
         <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
           <View style={styles.header}>
-            <Pressable onPress={onClose} hitSlop={12}>
+            <Pressable
+              onPress={onClose}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Close menu"
+            >
               <MaterialIcons name="close" size={24} color={colors.accentText} />
             </Pressable>
             <BrandTitle style={styles.title} chatColor={isDark ? brandColors.white : brandColors.navy} />
@@ -171,6 +168,8 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
                 onClose();
                 router.push("/profile");
               }}
+              accessibilityRole="button"
+              accessibilityLabel="Open profile"
             >
               {currentUser?.profile_picture ? (
                 <Image source={{ uri: currentUser.profile_picture }} style={styles.avatarImage} />
@@ -186,6 +185,8 @@ export function NavMenu({ visible, onClose, userInitial, onLogout }: NavMenuProp
                 key={item.label}
                 style={styles.menuRow}
                 onPress={() => handleMenuItemPress(item.label)}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
                 accessibilityState={item.label === "More" ? { expanded: isMoreExpanded } : undefined}
               >
                 <MaterialIcons name={item.icon} size={20} color={colors.accentText} />

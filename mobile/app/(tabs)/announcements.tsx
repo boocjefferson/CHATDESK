@@ -1,10 +1,13 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useTheme } from "../context/ThemeContext";
-import axiosClient from "../lib/axiosClient";
-import type { ThemePalette } from "../theme/colors";
+import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { NavMenu } from "../../components/nav-menu";
+import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
+import axiosClient from "../../lib/axiosClient";
+import type { ThemePalette } from "../../theme/colors";
 
 type Announcement = {
   announcement_id: number;
@@ -23,10 +26,14 @@ const formatDate = (isoString: string) =>
   });
 
 export default function AnnouncementsScreen() {
+  const { currentUser, logout } = useAuth();
   const { colors } = useTheme();
   const styles = createStyles(colors);
   const [announcements, setAnnouncements] = useState<Announcement[] | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const userInitial = currentUser?.first_name?.[0]?.toUpperCase() ?? "?";
 
   useEffect(() => {
     (async () => {
@@ -40,13 +47,30 @@ export default function AnnouncementsScreen() {
   }, []);
 
   return (
-    <View style={styles.screen}>
+    <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
-          <MaterialIcons name="arrow-back" size={24} color={colors.textPrimary} />
+        <Pressable
+          onPress={() => setIsMenuOpen(true)}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Open menu"
+        >
+          <MaterialIcons name="menu" size={26} color={colors.accentText} />
         </Pressable>
         <Text style={styles.title}>Announcements</Text>
-        <View style={{ width: 24 }} />
+        <Pressable
+          onPress={() => router.push("/profile")}
+          hitSlop={12}
+          style={styles.avatar}
+          accessibilityRole="button"
+          accessibilityLabel="Open profile"
+        >
+          {currentUser?.profile_picture ? (
+            <Image source={{ uri: currentUser.profile_picture }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.avatarText}>{userInitial}</Text>
+          )}
+        </Pressable>
       </View>
 
       {loadFailed ? (
@@ -68,21 +92,46 @@ export default function AnnouncementsScreen() {
           ))}
         </ScrollView>
       )}
-    </View>
+
+      <NavMenu
+        visible={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        userInitial={userInitial}
+        onLogout={logout}
+      />
+    </SafeAreaView>
   );
 }
 
 const createStyles = (colors: ThemePalette) =>
   StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.surface, paddingTop: 48 },
+    screen: { flex: 1, backgroundColor: colors.surface },
     header: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: 20,
-      paddingBottom: 16,
+      paddingVertical: 16,
     },
-    title: { fontSize: 22, fontFamily: "PlusJakartaSans_700Bold", color: colors.textPrimary },
+    title: { fontSize: 20, fontFamily: "PlusJakartaSans_700Bold", color: colors.textPrimary },
+    avatar: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      borderWidth: 1,
+      borderColor: colors.accentText,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.surface,
+      overflow: "hidden",
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    avatarImage: { width: 30, height: 30 },
+    avatarText: { fontFamily: "Montserrat_700Bold", color: colors.accentText, fontSize: 12 },
     centerState: {
       marginTop: 40,
       textAlign: "center",

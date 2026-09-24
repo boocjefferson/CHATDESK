@@ -94,7 +94,12 @@ export default function ProfileScreen() {
   return (
     <View style={styles.screen}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
           <MaterialIcons name="arrow-back" size={24} color={colors.accentText} />
         </Pressable>
         <Text style={styles.title}>Profile</Text>
@@ -102,7 +107,14 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.identityRow}>
-        <Pressable style={styles.avatar} onPress={handlePickPhoto} disabled={isUploadingPhoto}>
+        <Pressable
+          style={styles.avatar}
+          onPress={handlePickPhoto}
+          disabled={isUploadingPhoto}
+          accessibilityRole="button"
+          accessibilityLabel="Change profile photo"
+          accessibilityState={{ disabled: isUploadingPhoto, busy: isUploadingPhoto }}
+        >
           {isUploadingPhoto ? (
             <ActivityIndicator color={colors.accentText} />
           ) : currentUser?.profile_picture ? (

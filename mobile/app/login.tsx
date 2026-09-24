@@ -14,9 +14,12 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { AuthHeader } from "../components/auth-header";
 import { useAuth } from "../context/AuthContext";
-import { colors } from "../theme/colors";
+import { useTheme } from "../context/ThemeContext";
+import type { ThemePalette } from "../theme/colors";
 
 export default function LoginScreen() {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -77,6 +80,8 @@ export default function LoginScreen() {
             onPress={() => setIsPasswordVisible((prev) => !prev)}
             hitSlop={10}
             style={styles.eyeButton}
+            accessibilityRole="button"
+            accessibilityLabel={isPasswordVisible ? "Hide password" : "Show password"}
           >
             <MaterialIcons
               name={isPasswordVisible ? "visibility-off" : "visibility"}
@@ -88,11 +93,23 @@ export default function LoginScreen() {
 
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-        <Pressable onPress={() => router.push("/forgot-password")} style={styles.forgotRow}>
+        <Pressable
+          onPress={() => router.push("/forgot-password")}
+          style={styles.forgotRow}
+          accessibilityRole="button"
+          accessibilityLabel="Forgot password"
+        >
           <Text style={styles.forgotPasswordText}>Forgot password?</Text>
         </Pressable>
 
-        <Pressable style={styles.button} onPress={handleLogin} disabled={isSubmitting}>
+        <Pressable
+          style={styles.button}
+          onPress={handleLogin}
+          disabled={isSubmitting}
+          accessibilityRole="button"
+          accessibilityLabel="Log in"
+          accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
+        >
           {isSubmitting ? (
             <ActivityIndicator color={colors.white} />
           ) : (
@@ -100,7 +117,11 @@ export default function LoginScreen() {
           )}
         </Pressable>
 
-        <Pressable onPress={() => router.push("/register")}>
+        <Pressable
+          onPress={() => router.push("/register")}
+          accessibilityRole="button"
+          accessibilityLabel="No account? Sign up here"
+        >
           <Text style={styles.signupText}>
             No account? <Text style={styles.signupLink}>Sign up here</Text>
           </Text>
@@ -110,83 +131,88 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  sheet: {
-    flexGrow: 1,
-    paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 32,
-  },
-  heading: {
-    fontSize: 24,
-    fontFamily: "PlusJakartaSans_700Bold",
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  subheading: {
-    fontSize: 14,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 13,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    marginBottom: 16,
-    fontSize: 15,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textPrimary,
-  },
-  passwordField: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    marginBottom: 4,
-  },
-  passwordInput: {
-    flex: 1,
-    paddingVertical: 13,
-    fontSize: 15,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textPrimary,
-  },
-  eyeButton: { paddingLeft: 8, paddingVertical: 8 },
-  forgotRow: { alignSelf: "flex-end", marginTop: 8, marginBottom: 20 },
-  forgotPasswordText: {
-    fontSize: 13,
-    fontFamily: "Montserrat_700Bold",
-    color: colors.gold,
-  },
-  button: {
-    backgroundColor: colors.navy,
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  buttonText: { fontSize: 16, fontFamily: "Montserrat_700Bold", color: colors.white },
-  signupText: {
-    textAlign: "center",
-    fontSize: 13,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
-  },
-  signupLink: { fontFamily: "Montserrat_700Bold", color: colors.navy },
-  errorText: {
-    color: colors.errorRed,
-    fontSize: 13,
-    marginBottom: 4,
-    textAlign: "center",
-  },
-});
+const createStyles = (colors: ThemePalette) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.surface },
+    sheet: {
+      flexGrow: 1,
+      paddingHorizontal: 28,
+      paddingTop: 28,
+      paddingBottom: 32,
+    },
+    heading: {
+      fontSize: 24,
+      fontFamily: "PlusJakartaSans_700Bold",
+      color: colors.textPrimary,
+      marginBottom: 4,
+    },
+    subheading: {
+      fontSize: 14,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textSecondary,
+      marginBottom: 24,
+    },
+    label: {
+      fontSize: 13,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textSecondary,
+      marginBottom: 6,
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      paddingVertical: 13,
+      marginBottom: 16,
+      fontSize: 15,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textPrimary,
+    },
+    passwordField: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      marginBottom: 4,
+    },
+    passwordInput: {
+      flex: 1,
+      paddingVertical: 13,
+      fontSize: 15,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textPrimary,
+    },
+    eyeButton: { paddingLeft: 8, paddingVertical: 8 },
+    forgotRow: { alignSelf: "flex-end", marginTop: 8, marginBottom: 20 },
+    forgotPasswordText: {
+      fontSize: 13,
+      fontFamily: "Montserrat_700Bold",
+      color: colors.gold,
+    },
+    button: {
+      backgroundColor: colors.accent,
+      borderRadius: 14,
+      paddingVertical: 15,
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    buttonText: { fontSize: 16, fontFamily: "Montserrat_700Bold", color: colors.white },
+    signupText: {
+      textAlign: "center",
+      fontSize: 13,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textSecondary,
+    },
+    signupLink: { fontFamily: "Montserrat_700Bold", color: colors.accentText },
+    errorText: {
+      color: colors.errorRed,
+      fontSize: 13,
+      marginBottom: 4,
+      textAlign: "center",
+    },
+  });

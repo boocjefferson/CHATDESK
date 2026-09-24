@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createOffice, deleteOffice, getOffices, updateOffice } from "../api/offices.js";
 import OfficeFormModal from "../components/OfficeFormModal.jsx";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 
 export default function OfficeManagement() {
@@ -9,6 +10,8 @@ export default function OfficeManagement() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOffice, setEditingOffice] = useState(null);
+  const [pendingDeleteOffice, setPendingDeleteOffice] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [search, setSearch] = useState("");
 
   const loadOffices = () => {
@@ -30,10 +33,16 @@ export default function OfficeManagement() {
     return [...filtered].sort((a, b) => a.name.localeCompare(b.name));
   }, [offices, search]);
 
-  const handleDelete = async (officeId) => {
-    if (!window.confirm("Delete this office? FAQs and tickets routed to it will become unassigned.")) return;
-    await deleteOffice(officeId);
-    loadOffices();
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteOffice) return;
+    setIsDeleting(true);
+    try {
+      await deleteOffice(pendingDeleteOffice.office_id);
+      setPendingDeleteOffice(null);
+      loadOffices();
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleSave = async (payload) => {
@@ -89,6 +98,7 @@ export default function OfficeManagement() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -131,7 +141,7 @@ export default function OfficeManagement() {
                         </svg>
                       </button>
                       <button
-                        onClick={() => handleDelete(office.office_id)}
+                        onClick={() => setPendingDeleteOffice(office)}
                         aria-label="Delete office"
                         className="text-gray-400 transition-colors hover:text-red-500"
                       >
@@ -152,6 +162,7 @@ export default function OfficeManagement() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {isModalOpen && (
@@ -161,6 +172,15 @@ export default function OfficeManagement() {
           onClose={() => setIsModalOpen(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingDeleteOffice !== null}
+        title={`Delete ${pendingDeleteOffice?.name ?? "this office"}?`}
+        message="FAQs and tickets routed to it will become unassigned."
+        isConfirming={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDeleteOffice(null)}
+      />
     </section>
   );
 }

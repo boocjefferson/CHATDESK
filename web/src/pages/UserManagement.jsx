@@ -3,6 +3,8 @@ import { createUser, deleteUser, getUsers, updateUser } from "../api/users.js";
 import { getOffices } from "../api/offices.js";
 import UserFormModal from "../components/UserFormModal.jsx";
 import Pagination from "../components/Pagination.jsx";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
+import Toast from "../components/Toast.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -26,6 +28,9 @@ export default function UserManagement() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [pendingDeleteUser, setPendingDeleteUser] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -81,13 +86,17 @@ export default function UserManagement() {
 
   const activeCount = useMemo(() => users.filter((u) => u.is_active).length, [users]);
 
-  const handleDelete = async (userId) => {
-    if (!window.confirm("Delete this user?")) return;
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteUser) return;
+    setIsDeleting(true);
     try {
-      await deleteUser(userId);
+      await deleteUser(pendingDeleteUser.user_id);
+      setPendingDeleteUser(null);
       loadUsers();
     } catch (err) {
-      window.alert(err.response?.data?.message || "Could not delete this user.");
+      setToastMessage(err.response?.data?.message || "Could not delete this user.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -184,6 +193,7 @@ export default function UserManagement() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -286,7 +296,7 @@ export default function UserManagement() {
                             </svg>
                           </button>
                           <button
-                            onClick={() => handleDelete(user.user_id)}
+                            onClick={() => setPendingDeleteUser(user)}
                             aria-label="Delete user"
                             className="text-gray-400 transition-colors hover:text-red-500"
                           >
@@ -309,6 +319,7 @@ export default function UserManagement() {
             )}
           </tbody>
         </table>
+        </div>
         <Pagination page={page} count={totalCount} onPageChange={setPage} />
       </div>
 
@@ -320,6 +331,17 @@ export default function UserManagement() {
           onClose={() => setIsModalOpen(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingDeleteUser !== null}
+        title={`Delete ${pendingDeleteUser?.first_name ?? "this user"}?`}
+        message="This action cannot be undone."
+        isConfirming={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDeleteUser(null)}
+      />
+
+      <Toast message={toastMessage} onDismiss={() => setToastMessage("")} />
     </section>
   );
 }

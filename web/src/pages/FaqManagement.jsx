@@ -3,6 +3,7 @@ import { createFaq, deleteFaq, getFaqs, updateFaq } from "../api/faqs.js";
 import { getOffices } from "../api/offices.js";
 import FaqFormModal, { CATEGORIES } from "../components/FaqFormModal.jsx";
 import Pagination from "../components/Pagination.jsx";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
@@ -17,6 +18,8 @@ export default function FaqManagement() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFaq, setEditingFaq] = useState(null);
+  const [pendingDeleteFaq, setPendingDeleteFaq] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -70,11 +73,17 @@ export default function FaqManagement() {
       .catch(() => {});
   }, []);
 
-  const handleDelete = async (faqId) => {
-    if (!window.confirm("Delete this FAQ?")) return;
-    await deleteFaq(faqId);
-    loadFaqs();
-    loadCategoriesInUse();
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteFaq) return;
+    setIsDeleting(true);
+    try {
+      await deleteFaq(pendingDeleteFaq.faq_id);
+      setPendingDeleteFaq(null);
+      loadFaqs();
+      loadCategoriesInUse();
+    } finally {
+      setIsDeleting(false);
+    }
   };
   const handleSave = async (payload) => {
     if (editingFaq) {
@@ -171,6 +180,7 @@ export default function FaqManagement() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -229,7 +239,7 @@ export default function FaqManagement() {
                         </svg>
                       </button>
                       <button
-                        onClick={() => handleDelete(faq.faq_id)}
+                        onClick={() => setPendingDeleteFaq(faq)}
                         aria-label="Delete FAQ"
                         className="text-gray-400 transition-colors hover:text-red-500"
                       >
@@ -250,6 +260,7 @@ export default function FaqManagement() {
             )}
           </tbody>
         </table>
+        </div>
         <Pagination page={page} count={totalCount} onPageChange={setPage} />
       </div>
 
@@ -262,6 +273,15 @@ export default function FaqManagement() {
           onClose={() => setIsModalOpen(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingDeleteFaq !== null}
+        title="Delete this FAQ?"
+        message="This action cannot be undone."
+        isConfirming={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDeleteFaq(null)}
+      />
     </section>
   );
 }

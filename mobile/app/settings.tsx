@@ -28,7 +28,12 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.screen} edges={["top", "bottom"]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={12}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
           <MaterialIcons name="arrow-back" size={24} color={colors.accentText} />
         </Pressable>
         <Text style={styles.title}>Settings</Text>
@@ -55,6 +60,7 @@ export default function SettingsScreen() {
             onValueChange={toggleDarkMode}
             trackColor={{ false: colors.border, true: colors.accent }}
             thumbColor={colors.white}
+            accessibilityLabel="Dark Mode"
           />
         </View>
 

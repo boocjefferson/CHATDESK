@@ -16,7 +16,8 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { AuthHeader } from "../components/auth-header";
 import { useAuth } from "../context/AuthContext";
-import { colors } from "../theme/colors";
+import { useTheme } from "../context/ThemeContext";
+import type { ThemePalette } from "../theme/colors";
 
 // No Registration mockup existed in ui-prototype/ - matches Login's structure
 // and the same USTP branding. Course list confirmed by Jefferson against the
@@ -54,6 +55,8 @@ const COURSE_OPTIONS = [
 ];
 
 export default function RegisterScreen() {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [schoolId, setSchoolId] = useState("");
@@ -157,6 +160,8 @@ export default function RegisterScreen() {
             onPress={() => setIsPasswordVisible((prev) => !prev)}
             hitSlop={10}
             style={styles.eyeButton}
+            accessibilityRole="button"
+            accessibilityLabel={isPasswordVisible ? "Hide password" : "Show password"}
           >
             <MaterialIcons
               name={isPasswordVisible ? "visibility-off" : "visibility"}
@@ -167,7 +172,12 @@ export default function RegisterScreen() {
         </View>
 
         <Text style={styles.label}>Course</Text>
-        <Pressable style={styles.pickerWrapper} onPress={() => setIsCoursePickerOpen(true)}>
+        <Pressable
+          style={styles.pickerWrapper}
+          onPress={() => setIsCoursePickerOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Course: ${selectedCourseLabel}`}
+        >
           <Text style={styles.pickerValueText}>{selectedCourseLabel}</Text>
           <MaterialIcons name="expand-more" size={20} color={colors.textMuted} />
         </Pressable>
@@ -190,6 +200,8 @@ export default function RegisterScreen() {
                       setCourse(item.value);
                       setIsCoursePickerOpen(false);
                     }}
+                    accessibilityRole="button"
+                    accessibilityLabel={item.label}
                   >
                     <Text
                       style={[
@@ -208,7 +220,14 @@ export default function RegisterScreen() {
 
         {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-        <Pressable style={styles.button} onPress={handleRegister} disabled={isSubmitting}>
+        <Pressable
+          style={styles.button}
+          onPress={handleRegister}
+          disabled={isSubmitting}
+          accessibilityRole="button"
+          accessibilityLabel="Sign up"
+          accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
+        >
           {isSubmitting ? (
             <ActivityIndicator color={colors.white} />
           ) : (
@@ -216,7 +235,11 @@ export default function RegisterScreen() {
           )}
         </Pressable>
 
-        <Pressable onPress={() => router.push("/login")}>
+        <Pressable
+          onPress={() => router.push("/login")}
+          accessibilityRole="button"
+          accessibilityLabel="Already have an account? Log in here"
+        >
           <Text style={styles.signupText}>
             Already have an account? <Text style={styles.signupLink}>Log in here</Text>
           </Text>
@@ -226,117 +249,124 @@ export default function RegisterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  sheet: {
-    flexGrow: 1,
-    paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 32,
-  },
-  heading: {
-    fontSize: 24,
-    fontFamily: "PlusJakartaSans_700Bold",
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  subheading: {
-    fontSize: 14,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 13,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    marginBottom: 16,
-    fontSize: 15,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textPrimary,
-  },
-  passwordField: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  passwordInput: {
-    flex: 1,
-    paddingVertical: 13,
-    fontSize: 15,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textPrimary,
-  },
-  eyeButton: { paddingLeft: 8, paddingVertical: 8 },
-  pickerWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    marginBottom: 20,
-  },
-  pickerValueText: {
-    fontSize: 15,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textPrimary,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  modalSheet: {
-    maxHeight: 360,
-    backgroundColor: colors.white,
-    borderRadius: 14,
-    paddingVertical: 8,
-  },
-  modalOption: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-  },
-  modalOptionText: {
-    fontSize: 16,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textPrimary,
-  },
-  modalOptionTextSelected: {
-    fontFamily: "Montserrat_700Bold",
-    color: colors.navy,
-  },
-  button: {
-    backgroundColor: colors.navy,
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  buttonText: { fontSize: 16, fontFamily: "Montserrat_700Bold", color: colors.white },
-  signupText: {
-    textAlign: "center",
-    fontSize: 13,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
-  },
-  signupLink: { fontFamily: "Montserrat_700Bold", color: colors.navy },
-  errorText: {
-    color: colors.errorRed,
-    fontSize: 13,
-    marginBottom: 12,
-    textAlign: "center",
-  },
-});
+const createStyles = (colors: ThemePalette) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.surface },
+    sheet: {
+      flexGrow: 1,
+      paddingHorizontal: 28,
+      paddingTop: 28,
+      paddingBottom: 32,
+    },
+    heading: {
+      fontSize: 24,
+      fontFamily: "PlusJakartaSans_700Bold",
+      color: colors.textPrimary,
+      marginBottom: 4,
+    },
+    subheading: {
+      fontSize: 14,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textSecondary,
+      marginBottom: 24,
+    },
+    label: {
+      fontSize: 13,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textSecondary,
+      marginBottom: 6,
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      paddingVertical: 13,
+      marginBottom: 16,
+      fontSize: 15,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textPrimary,
+    },
+    passwordField: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      marginBottom: 16,
+    },
+    passwordInput: {
+      flex: 1,
+      paddingVertical: 13,
+      fontSize: 15,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textPrimary,
+    },
+    eyeButton: { paddingLeft: 8, paddingVertical: 8 },
+    pickerWrapper: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      paddingVertical: 13,
+      marginBottom: 20,
+    },
+    pickerValueText: {
+      fontSize: 15,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textPrimary,
+    },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.4)",
+      justifyContent: "center",
+      paddingHorizontal: 24,
+    },
+    modalSheet: {
+      maxHeight: 360,
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      paddingVertical: 8,
+    },
+    modalOption: {
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+    },
+    modalOptionText: {
+      fontSize: 16,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textPrimary,
+    },
+    modalOptionTextSelected: {
+      fontFamily: "Montserrat_700Bold",
+      color: colors.accentText,
+    },
+    button: {
+      backgroundColor: colors.accent,
+      borderRadius: 14,
+      paddingVertical: 15,
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    buttonText: { fontSize: 16, fontFamily: "Montserrat_700Bold", color: colors.white },
+    signupText: {
+      textAlign: "center",
+      fontSize: 13,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textSecondary,
+    },
+    signupLink: { fontFamily: "Montserrat_700Bold", color: colors.accentText },
+    errorText: {
+      color: colors.errorRed,
+      fontSize: 13,
+      marginBottom: 12,
+      textAlign: "center",
+    },
+  });

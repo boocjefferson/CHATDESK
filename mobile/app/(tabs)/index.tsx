@@ -6,9 +6,8 @@ import {
   ActivityIndicator,
   FlatList,
   Image,
-  KeyboardAvoidingView,
+  Keyboard,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,13 +16,13 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BrandTitle } from "../components/brand-title";
-import { NavMenu } from "../components/nav-menu";
-import { useAuth } from "../context/AuthContext";
-import { useChat } from "../context/ChatContext";
-import { useTheme } from "../context/ThemeContext";
-import axiosClient from "../lib/axiosClient";
-import { colors as brandColors, type ThemePalette } from "../theme/colors";
+import { BrandTitle } from "../../components/brand-title";
+import { NavMenu } from "../../components/nav-menu";
+import { useAuth } from "../../context/AuthContext";
+import { useChat } from "../../context/ChatContext";
+import { useTheme } from "../../context/ThemeContext";
+import axiosClient from "../../lib/axiosClient";
+import { colors as brandColors, type ThemePalette } from "../../theme/colors";
 
 // Matches the FAQ categories already modeled on the backend
 // (Enrollment, Scholarship, Clearance, Discipline, General).
@@ -50,6 +49,7 @@ export default function StudentChatScreen() {
   const [message, setMessage] = useState("");
   const [phase, setPhase] = useState<Phase | null>(null);
   const [isPhaseBannerDismissed, setIsPhaseBannerDismissed] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const userInitial = currentUser?.first_name?.[0]?.toUpperCase() ?? "?";
   const hasActivePhase = phase !== null && phase.phase_id !== null && phase.name !== null;
@@ -63,6 +63,20 @@ export default function StudentChatScreen() {
         setPhase(null);
       }
     })();
+  }, []);
+
+  // Not KeyboardAvoidingView - its automatic height/padding measurement is
+  // unreliable once this screen lives inside expo-router's Tabs navigator
+  // (the input bar was ending up completely hidden behind the keyboard).
+  // Tracking the keyboard height directly and applying it as padding sidesteps
+  // that ancestor-height-chain ambiguity entirely.
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) => setKeyboardHeight(e.endCoordinates.height));
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0));
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
 
   const handleSend = () => {
@@ -85,6 +99,8 @@ export default function StudentChatScreen() {
             onPress={() => setIsMenuOpen(true)}
             hitSlop={12}
             style={({ pressed }) => [pressed && styles.pressedIcon]}
+            accessibilityRole="button"
+            accessibilityLabel="Open menu"
           >
             <MaterialIcons name="menu" size={26} color={colors.accentText} />
           </Pressable>
@@ -93,6 +109,8 @@ export default function StudentChatScreen() {
             onPress={() => router.push("/profile")}
             hitSlop={12}
             style={({ pressed }) => [styles.avatar, pressed && styles.pressedIcon]}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
           >
             {currentUser?.profile_picture ? (
               <Image source={{ uri: currentUser.profile_picture }} style={styles.avatarImage} />
@@ -103,8 +121,14 @@ export default function StudentChatScreen() {
         </View>
 
         <Pressable
-          style={({ pressed }) => [styles.categoryChip, pressed && styles.categoryChipPressed]}
+          style={({ pressed }) => [
+            styles.categoryChip,
+            hasActivePhase && !isPhaseBannerDismissed && styles.categoryChipCompact,
+            pressed && styles.categoryChipPressed,
+          ]}
           onPress={() => setIsCategoryPickerOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={selectedOffice ? `Category: ${selectedOffice.name}` : "Choose a category"}
         >
           <MaterialIcons name="apartment" size={16} color={colors.accentText} />
           <Text style={styles.categoryChipText} numberOfLines={1}>
@@ -134,6 +158,9 @@ export default function StudentChatScreen() {
                         setSelectedOffice(item.office_id === null ? null : { office_id: item.office_id, name: item.name });
                         setIsCategoryPickerOpen(false);
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel={item.name}
+                      accessibilityState={{ selected: isSelected }}
                     >
                       <Text style={[styles.categoryModalOptionText, isSelected && styles.categoryModalOptionTextSelected]}>
                         {item.name}
@@ -155,16 +182,18 @@ export default function StudentChatScreen() {
                 <Text style={styles.phaseBannerMessage}>{phase.guidance_message}</Text>
               ) : null}
             </View>
-            <Pressable onPress={() => setIsPhaseBannerDismissed(true)} hitSlop={12}>
+            <Pressable
+              onPress={() => setIsPhaseBannerDismissed(true)}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Dismiss phase banner"
+            >
               <MaterialIcons name="close" size={18} color={colors.textSecondary} />
             </Pressable>
           </View>
         ) : null}
 
-        <KeyboardAvoidingView
-          style={styles.body}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
+        <View style={[styles.body, { paddingBottom: keyboardHeight }]}>
           {messages.length === 0 ? (
             <View style={styles.welcomeBlock}>
               <Text style={styles.welcomeTitle}>
@@ -250,11 +279,14 @@ export default function StudentChatScreen() {
               ]}
               onPress={handleSend}
               disabled={isSending || !message.trim()}
+              accessibilityRole="button"
+              accessibilityLabel="Send message"
+              accessibilityState={{ disabled: isSending || !message.trim() }}
             >
               <MaterialIcons name="send" size={20} color={colors.white} />
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+        </View>
 
         <NavMenu
           visible={isMenuOpen}
@@ -315,6 +347,12 @@ const createStyles = (colors: ThemePalette) =>
       shadowOpacity: 0.06,
       shadowRadius: 3,
       elevation: 1,
+    },
+    // Applied when the phase banner is also visible, so the two blocks
+    // stacked at the top don't crowd out the welcome message beneath them.
+    categoryChipCompact: {
+      marginBottom: 6,
+      paddingVertical: 7,
     },
     categoryChipPressed: { opacity: 0.7 },
     categoryChipText: {

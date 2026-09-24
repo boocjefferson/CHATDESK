@@ -6,6 +6,7 @@ import {
   updateAnnouncement,
 } from "../api/announcements.js";
 import AnnouncementFormModal from "../components/AnnouncementFormModal.jsx";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 
 export default function AnnouncementManagement() {
@@ -14,6 +15,8 @@ export default function AnnouncementManagement() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
+  const [pendingDeleteAnnouncement, setPendingDeleteAnnouncement] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [search, setSearch] = useState("");
 
   const loadAnnouncements = () => {
@@ -35,10 +38,16 @@ export default function AnnouncementManagement() {
     );
   }, [announcements, search]);
 
-  const handleDelete = async (announcementId) => {
-    if (!window.confirm("Delete this announcement?")) return;
-    await deleteAnnouncement(announcementId);
-    loadAnnouncements();
+  const handleConfirmDelete = async () => {
+    if (!pendingDeleteAnnouncement) return;
+    setIsDeleting(true);
+    try {
+      await deleteAnnouncement(pendingDeleteAnnouncement.announcement_id);
+      setPendingDeleteAnnouncement(null);
+      loadAnnouncements();
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleSave = async (payload) => {
@@ -94,6 +103,7 @@ export default function AnnouncementManagement() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -144,7 +154,7 @@ export default function AnnouncementManagement() {
                         </svg>
                       </button>
                       <button
-                        onClick={() => handleDelete(announcement.announcement_id)}
+                        onClick={() => setPendingDeleteAnnouncement(announcement)}
                         aria-label="Delete announcement"
                         className="text-gray-400 transition-colors hover:text-red-500"
                       >
@@ -165,6 +175,7 @@ export default function AnnouncementManagement() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {isModalOpen && (
@@ -174,6 +185,15 @@ export default function AnnouncementManagement() {
           onClose={() => setIsModalOpen(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingDeleteAnnouncement !== null}
+        title={`Delete "${pendingDeleteAnnouncement?.title ?? "this announcement"}"?`}
+        message="This action cannot be undone."
+        isConfirming={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDeleteAnnouncement(null)}
+      />
     </section>
   );
 }

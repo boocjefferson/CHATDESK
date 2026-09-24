@@ -14,12 +14,15 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { router } from "expo-router";
 import { AuthHeader } from "../components/auth-header";
 import axiosClient from "../lib/axiosClient";
-import { colors } from "../theme/colors";
+import { useTheme } from "../context/ThemeContext";
+import type { ThemePalette } from "../theme/colors";
 
 // No mockup for this screen in ui-prototype/ - matches Login/Register's
 // structure and USTP branding. Two steps: request a code by email, then
 // enter that code with a new password.
 export default function ForgotPasswordScreen() {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const [step, setStep] = useState<"request" | "confirm">("request");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -108,7 +111,14 @@ export default function ForgotPasswordScreen() {
 
             {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-            <Pressable style={styles.button} onPress={handleRequestCode} disabled={isSubmitting || !email}>
+            <Pressable
+              style={styles.button}
+              onPress={handleRequestCode}
+              disabled={isSubmitting || !email}
+              accessibilityRole="button"
+              accessibilityLabel="Send reset code"
+              accessibilityState={{ disabled: isSubmitting || !email, busy: isSubmitting }}
+            >
               {isSubmitting ? (
                 <ActivityIndicator color={colors.white} />
               ) : (
@@ -145,6 +155,8 @@ export default function ForgotPasswordScreen() {
                 onPress={() => setIsNewPasswordVisible((prev) => !prev)}
                 hitSlop={10}
                 style={styles.eyeButton}
+                accessibilityRole="button"
+                accessibilityLabel={isNewPasswordVisible ? "Hide password" : "Show password"}
               >
                 <MaterialIcons
                   name={isNewPasswordVisible ? "visibility-off" : "visibility"}
@@ -168,6 +180,8 @@ export default function ForgotPasswordScreen() {
                 onPress={() => setIsConfirmPasswordVisible((prev) => !prev)}
                 hitSlop={10}
                 style={styles.eyeButton}
+                accessibilityRole="button"
+                accessibilityLabel={isConfirmPasswordVisible ? "Hide password" : "Show password"}
               >
                 <MaterialIcons
                   name={isConfirmPasswordVisible ? "visibility-off" : "visibility"}
@@ -183,6 +197,12 @@ export default function ForgotPasswordScreen() {
               style={styles.button}
               onPress={handleConfirmReset}
               disabled={isSubmitting || !code || !newPassword || !confirmPassword}
+              accessibilityRole="button"
+              accessibilityLabel="Reset password"
+              accessibilityState={{
+                disabled: isSubmitting || !code || !newPassword || !confirmPassword,
+                busy: isSubmitting,
+              }}
             >
               {isSubmitting ? (
                 <ActivityIndicator color={colors.white} />
@@ -191,7 +211,11 @@ export default function ForgotPasswordScreen() {
               )}
             </Pressable>
 
-            <Pressable onPress={() => setStep("request")}>
+            <Pressable
+              onPress={() => setStep("request")}
+              accessibilityRole="button"
+              accessibilityLabel="Didn't get a code? Try again"
+            >
               <Text style={styles.signupText}>
                 Didn&apos;t get a code? <Text style={styles.signupLink}>Try again</Text>
               </Text>
@@ -199,7 +223,11 @@ export default function ForgotPasswordScreen() {
           </>
         )}
 
-        <Pressable onPress={() => router.replace("/login")}>
+        <Pressable
+          onPress={() => router.replace("/login")}
+          accessibilityRole="button"
+          accessibilityLabel="Back to log in"
+        >
           <Text style={styles.signupText}>
             Back to <Text style={styles.signupLink}>Log in</Text>
           </Text>
@@ -209,85 +237,90 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.white },
-  sheet: {
-    flexGrow: 1,
-    paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 32,
-  },
-  heading: {
-    fontSize: 24,
-    fontFamily: "PlusJakartaSans_700Bold",
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  subheading: {
-    fontSize: 14,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 13,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 13,
-    marginBottom: 16,
-    fontSize: 15,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textPrimary,
-  },
-  passwordField: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  passwordInput: {
-    flex: 1,
-    paddingVertical: 13,
-    fontSize: 15,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textPrimary,
-  },
-  eyeButton: { paddingLeft: 8, paddingVertical: 8 },
-  button: {
-    backgroundColor: colors.navy,
-    borderRadius: 14,
-    paddingVertical: 15,
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  buttonText: { fontSize: 16, fontFamily: "Montserrat_700Bold", color: colors.white },
-  signupText: {
-    textAlign: "center",
-    fontSize: 13,
-    fontFamily: "Montserrat_400Regular",
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  signupLink: { fontFamily: "Montserrat_700Bold", color: colors.navy },
-  errorText: {
-    color: colors.errorRed,
-    fontSize: 13,
-    marginBottom: 12,
-    textAlign: "center",
-  },
-  infoText: {
-    color: colors.textPrimary,
-    fontSize: 13,
-    marginBottom: 16,
-    textAlign: "center",
-    fontFamily: "Montserrat_400Regular",
-  },
-});
+const createStyles = (colors: ThemePalette) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.surface },
+    sheet: {
+      flexGrow: 1,
+      paddingHorizontal: 28,
+      paddingTop: 28,
+      paddingBottom: 32,
+    },
+    heading: {
+      fontSize: 24,
+      fontFamily: "PlusJakartaSans_700Bold",
+      color: colors.textPrimary,
+      marginBottom: 4,
+    },
+    subheading: {
+      fontSize: 14,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textSecondary,
+      marginBottom: 24,
+    },
+    label: {
+      fontSize: 13,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textSecondary,
+      marginBottom: 6,
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      paddingVertical: 13,
+      marginBottom: 16,
+      fontSize: 15,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textPrimary,
+    },
+    passwordField: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      marginBottom: 16,
+    },
+    passwordInput: {
+      flex: 1,
+      paddingVertical: 13,
+      fontSize: 15,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textPrimary,
+    },
+    eyeButton: { paddingLeft: 8, paddingVertical: 8 },
+    button: {
+      backgroundColor: colors.accent,
+      borderRadius: 14,
+      paddingVertical: 15,
+      alignItems: "center",
+      marginBottom: 20,
+    },
+    buttonText: { fontSize: 16, fontFamily: "Montserrat_700Bold", color: colors.white },
+    signupText: {
+      textAlign: "center",
+      fontSize: 13,
+      fontFamily: "Montserrat_400Regular",
+      color: colors.textSecondary,
+      marginTop: 4,
+    },
+    signupLink: { fontFamily: "Montserrat_700Bold", color: colors.accentText },
+    errorText: {
+      color: colors.errorRed,
+      fontSize: 13,
+      marginBottom: 12,
+      textAlign: "center",
+    },
+    infoText: {
+      color: colors.textPrimary,
+      fontSize: 13,
+      marginBottom: 16,
+      textAlign: "center",
+      fontFamily: "Montserrat_400Regular",
+    },
+  });

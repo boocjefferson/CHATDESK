@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPhase, deletePhase, extractPhasesFromPdf, getPhases, updatePhase } from "../api/phases.js";
 import PhaseFormModal from "../components/PhaseFormModal.jsx";
 import PhaseExtractReview from "../components/PhaseExtractReview.jsx";
+import ConfirmDialog from "../components/ConfirmDialog.jsx";
 import { ErrorState, LoadingState } from "../components/PageState.jsx";
 
 function phaseStatus(phase) {
@@ -17,6 +18,8 @@ export default function PhaseManagement() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPhase, setEditingPhase] = useState(null);
+  const [pendingDeletePhase, setPendingDeletePhase] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [search, setSearch] = useState("");
   const [extractedCandidates, setExtractedCandidates] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -47,10 +50,16 @@ export default function PhaseManagement() {
     return [...filtered].sort((a, b) => a.start_date.localeCompare(b.start_date));
   }, [phases, search]);
 
-  const handleDelete = async (phaseId) => {
-    if (!window.confirm("Delete this phase?")) return;
-    await deletePhase(phaseId);
-    loadPhases();
+  const handleConfirmDelete = async () => {
+    if (!pendingDeletePhase) return;
+    setIsDeleting(true);
+    try {
+      await deletePhase(pendingDeletePhase.phase_id);
+      setPendingDeletePhase(null);
+      loadPhases();
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleSave = async (payload) => {
@@ -163,6 +172,7 @@ export default function PhaseManagement() {
       {extractError && <p className="mb-4 text-sm text-red-600">{extractError}</p>}
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -217,7 +227,7 @@ export default function PhaseManagement() {
                           </svg>
                         </button>
                         <button
-                          onClick={() => handleDelete(phase.phase_id)}
+                          onClick={() => setPendingDeletePhase(phase)}
                           aria-label="Delete phase"
                           className="text-gray-400 transition-colors hover:text-red-500"
                         >
@@ -239,6 +249,7 @@ export default function PhaseManagement() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {isModalOpen && (
@@ -248,6 +259,15 @@ export default function PhaseManagement() {
           onClose={() => setIsModalOpen(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={pendingDeletePhase !== null}
+        title={`Delete ${pendingDeletePhase?.name ?? "this phase"}?`}
+        message="This action cannot be undone."
+        isConfirming={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setPendingDeletePhase(null)}
+      />
     </section>
   );
 }

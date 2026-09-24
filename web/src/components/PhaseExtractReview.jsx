@@ -92,6 +92,7 @@ export default function PhaseExtractReview({ candidates, onDone }) {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -124,7 +125,7 @@ export default function PhaseExtractReview({ candidates, onDone }) {
                 </td>
                 <td className="px-5 py-3.5">
                   {row._status === "saved" && (
-                    <span className="rounded-full bg-status-resolved/15 px-2.5 py-0.5 text-xs font-medium text-status-resolved">
+                    <span className="whitespace-nowrap rounded-full bg-status-resolved/15 px-2.5 py-0.5 text-xs font-medium text-status-resolved">
                       Saved
                     </span>
                   )}
@@ -151,6 +152,7 @@ export default function PhaseExtractReview({ candidates, onDone }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {editingRow && (

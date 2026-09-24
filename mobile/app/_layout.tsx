@@ -40,14 +40,12 @@ function RootNavigator() {
   // screens from this list.
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
+      <Stack.Screen name="(tabs)" />
       <Stack.Screen name="login" />
       <Stack.Screen name="register" />
       <Stack.Screen name="forgot-password" />
       <Stack.Screen name="settings" />
-      <Stack.Screen name="tickets" />
       <Stack.Screen name="profile" />
-      <Stack.Screen name="announcements" />
     </Stack>
   );
 }

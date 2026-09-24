@@ -243,6 +243,7 @@ export default function TicketManagement() {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -363,6 +364,7 @@ export default function TicketManagement() {
             )}
           </tbody>
         </table>
+        </div>
         <Pagination page={page} count={totalCount} onPageChange={setPage} />
       </div>
     </section>
